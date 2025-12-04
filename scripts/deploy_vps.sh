@@ -32,7 +32,11 @@ fi
 # git pull origin main
 
 # 3. Prune old images to save space
-echo ">>> Cleaning up old Docker images..."
+echo ">>> Cleaning up old Docker images and containers..."
+# Explicitly stop and remove the old 'web' service if it exists
+docker stop web-1 2>/dev/null || true
+docker rm web-1 2>/dev/null || true
+docker compose down --remove-orphans
 docker system prune -f
 
 # 4. Build and Start Services
