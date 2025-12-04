@@ -7,6 +7,14 @@ set -e
 
 echo ">>> Starting VPS Deployment Setup..."
 
+# 0. Check execution directory
+if [ ! -f "docker-compose.yml" ]; then
+    echo ">>> Error: docker-compose.yml not found!"
+    echo ">>> Please run this script from the project root directory."
+    echo ">>> Example: ./scripts/deploy_vps.sh"
+    exit 1
+fi
+
 # 1. Check for .env file
 if [ ! -f .env ]; then
     echo ">>> .env file not found. Creating from .env.prod.example..."

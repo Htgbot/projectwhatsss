@@ -7,7 +7,24 @@ This guide explains how to host the WhatsAppy Cloud project on a VPS using Docke
 
 We have provided a helper script to automate the setup.
 
-1.  **Upload** your project to the VPS.
+### Option A: Deploy via GitHub (Recommended)
+
+1.  **SSH into your VPS**.
+2.  **Clone your repository**:
+    ```bash
+    # Replace with your actual GitHub URL
+    git clone https://github.com/YOUR_USERNAME/YOUR_REPO.git project
+    cd project
+    ```
+3.  **Run the deployment script**:
+    ```bash
+    chmod +x scripts/deploy_vps.sh
+    ./scripts/deploy_vps.sh
+    ```
+
+### Option B: Manual Upload (SCP/SFTP)
+
+1.  **Upload** your project files to the VPS.
 2.  **Run the deployment script**:
     ```bash
     chmod +x scripts/deploy_vps.sh
