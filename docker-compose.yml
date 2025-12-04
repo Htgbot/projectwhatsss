@@ -212,7 +212,8 @@ services:
       test: ["CMD", "wget", "--no-verbose", "--spider", "http://localhost:8081/status"]
       timeout: 5s
       interval: 5s
-      retries: 3
+      retries: 10
+      start_period: 10s
 
   # 8. API Gateway (Kong)
   kong:
@@ -236,8 +237,6 @@ services:
       realtime:
         condition: service_healthy
       storage:
-        condition: service_healthy
-      functions:
         condition: service_healthy
       meta:
         condition: service_healthy
