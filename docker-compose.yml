@@ -82,7 +82,7 @@ services:
     image: supabase/gotrue:v2.158.1
     depends_on:
       db:
-        condition: service_healthy
+        condition: service_started
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--spider", "http://localhost:9999/health"]
       timeout: 5s
@@ -110,7 +110,7 @@ services:
     image: postgrest/postgrest:v12.2.0
     depends_on:
       db:
-        condition: service_healthy
+        condition: service_started
     restart: unless-stopped
     environment:
       PGRST_DB_URI: postgres://authenticator:${POSTGRES_PASSWORD}@db:5432/postgres
@@ -127,7 +127,7 @@ services:
     image: supabase/realtime:v2.25.22
     depends_on:
       db:
-        condition: service_healthy
+        condition: service_started
     restart: unless-stopped
     environment:
       PORT: 4000
@@ -155,7 +155,7 @@ services:
     image: supabase/storage-api:v1.11.13
     depends_on:
       db:
-        condition: service_healthy
+        condition: service_started
       rest:
         condition: service_started
     restart: unless-stopped
@@ -185,7 +185,7 @@ services:
     image: supabase/postgres-meta:v0.80.0
     depends_on:
       db:
-        condition: service_healthy
+        condition: service_started
     restart: unless-stopped
     environment:
       PG_META_PORT: 8080
