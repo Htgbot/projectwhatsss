@@ -102,7 +102,7 @@ services:
   # 3. REST API (PostgREST)
   rest:
     container_name: supabase-rest
-    image: supabase/postgrest:v12.2.0
+    image: postgrest/postgrest:v12.2.0
     depends_on:
       db:
         condition: service_healthy
