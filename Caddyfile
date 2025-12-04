@@ -1,0 +1,31 @@
+{
+    # Global options
+    email your-email@example.com
+}
+
+# The domain will be provided via environment variable or hardcoded
+{$DOMAIN} {
+    # Frontend
+    handle / {
+        reverse_proxy app:80
+    }
+    handle /assets/* {
+        reverse_proxy app:80
+    }
+    handle /* {
+        reverse_proxy app:80
+    }
+
+    # Supabase API Gateway (Kong)
+    handle_path /api/* {
+        rewrite * /api{path}
+        reverse_proxy kong:8000
+    }
+    
+    # Direct access to functions if Kong doesn't handle it or for simplicity
+    # But usually Kong handles /functions/v1/...
+    
+    log {
+        output file /var/log/caddy/access.log
+    }
+}
