@@ -38,12 +38,12 @@ docker system prune -f
 # 4. Build and Start Services
 echo ">>> Building and Starting Services..."
 # We use --build to ensure the frontend picks up the latest env vars (ANON_KEY)
-docker compose -f docker-compose.prod.yml up -d --build
+docker compose up -d --build
 
 # 5. Wait for Healthchecks
 echo ">>> Waiting for services to be healthy..."
 sleep 10
-docker compose -f docker-compose.prod.yml ps
+docker compose ps
 
 echo ">>> Deployment Complete!"
 echo ">>> Access your app at: http://$(grep DOMAIN .env | cut -d '=' -f2)"

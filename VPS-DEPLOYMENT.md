@@ -42,14 +42,14 @@ We have provided a helper script to automate the setup.
 Run the production compose file. We use `--build` to ensure the frontend uses the correct keys.
 
 ```bash
-docker compose -f docker-compose.prod.yml up -d --build
+docker compose up -d --build --remove-orphans
 ```
 
 ### 4. Verify Deployment
 
 1.  **Check Containers**:
     ```bash
-    docker compose -f docker-compose.prod.yml ps
+    docker compose ps
     ```
     All services should be `healthy`.
 
