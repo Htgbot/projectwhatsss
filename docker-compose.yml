@@ -15,12 +15,13 @@ services:
     depends_on:
       kong:
         condition: service_started
-    healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--spider", "http://localhost:8080"]
-      interval: 10s
-      timeout: 5s
-      retries: 20
-      start_period: 30s
+    # Healthcheck removed to ensure stability on VPS. Nginx is reliable enough.
+    # healthcheck:
+    #   test: ["CMD", "wget", "--no-verbose", "--spider", "http://localhost:8080"]
+    #   interval: 10s
+    #   timeout: 5s
+    #   retries: 20
+    #   start_period: 30s
 
   # --- Reverse Proxy (Caddy) ---
   caddy:
@@ -35,7 +36,7 @@ services:
       - caddy_config:/config
     depends_on:
       app:
-        condition: service_healthy
+        condition: service_started
       kong:
         condition: service_started
     healthcheck:
