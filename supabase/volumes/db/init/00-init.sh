@@ -3,10 +3,14 @@ set -e
 
 echo "Running init script with POSTGRES_PASSWORD..."
 
+# Default to 'postgres' if POSTGRES_USER is not set
+DB_USER=${POSTGRES_USER:-postgres}
+DB_NAME=${POSTGRES_DB:-postgres}
+
 # Use the POSTGRES_PASSWORD environment variable for the new roles so they match docker-compose
 # We escape the password in case it has special characters (basic handling)
 
-psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-EOSQL
+psql -v ON_ERROR_STOP=1 --username "$DB_USER" --dbname "$DB_NAME" <<-EOSQL
   -- Create roles if they don't exist
   DO
   \$do\$
