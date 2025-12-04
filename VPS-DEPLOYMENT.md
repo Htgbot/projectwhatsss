@@ -11,28 +11,32 @@ This guide explains how to host the WhatsAppy Cloud project (Frontend + Supabase
 
 ## Step 1: Setup Project on VPS
 
-### Option A: One-Click Deployment Script (Recommended)
-If you are on Windows (PowerShell), use our included script to upload everything automatically.
+### Option A: Git Pull (Recommended)
+1.  **Push your code to GitHub**:
+    *   Create a new repository on [GitHub](https://github.com/new).
+    *   Run these commands in your local terminal:
+        ```bash
+        git remote add origin https://github.com/YOUR_USERNAME/YOUR_REPO_NAME.git
+        git branch -M main
+        git push -u origin main
+        ```
 
-1.  Run the script:
-    ```powershell
-    ./scripts/deploy_to_vps.ps1
-    ```
-2.  Enter your VPS Username (e.g., `root`) and IP Address when prompted.
-3.  The script will upload the project files to `/opt/whatsappy` on your VPS.
+2.  **Clone on VPS**:
+    *   SSH into your VPS: `ssh root@your-vps-ip`
+    *   Clone the repo:
+        ```bash
+        git clone https://github.com/YOUR_USERNAME/YOUR_REPO_NAME.git /opt/whatsappy
+        cd /opt/whatsappy
+        ```
 
-### Option B: Manual Upload
-1.  **Copy Files**: Upload your project files to the VPS (e.g., via `git clone` or `scp`).
-    ```bash
-    # Example using git
-    git clone <your-repo-url> /opt/whatsappy
-    cd /opt/whatsappy
-    ```
+### Option B: One-Click Deployment Script (Alternative)
+If you are on Windows (PowerShell) and don't want to use GitHub.
+1.  Run `./scripts/deploy_to_vps.ps1` locally.
+2.  Enter your VPS details.
 
-2.  **Create Production Configs**:
-    We have prepared a production docker-compose file (`docker-compose.prod.yml`) and Caddyfile.
+## Step 2: Create Production Configs
 
-3.  **Configure Environment Variables**:
+1.  **Configure Environment Variables**:
     Copy the example env file:
     ```bash
     cp .env.prod.example .env
@@ -68,7 +72,7 @@ If you are on Windows (PowerShell), use our included script to upload everything
           ```
         - *Note: `iat` is current timestamp, `exp` is future timestamp.*
 
-## Step 2: Start the Services
+## Step 3: Start the Services
 
 Run the production stack:
 
@@ -82,7 +86,7 @@ This will:
 3.  Build and start the Frontend App.
 4.  Start Caddy (Reverse Proxy) which will **automatically obtain SSL certificates** for your domain.
 
-## Step 3: Verify Deployment
+## Step 4: Verify Deployment
 
 1.  Visit `https://chat.yourdomain.com`. You should see the login page.
 2.  Check logs if something is wrong:
@@ -90,7 +94,7 @@ This will:
     docker compose -f docker-compose.prod.yml logs -f
     ```
 
-## Step 4: Database Setup
+## Step 5: Database Setup
 
 Your production database is empty. You need to apply the schema.
 
@@ -101,13 +105,17 @@ Your production database is empty. You need to apply the schema.
     # OR for full schema if not synced
     npx supabase db dump > full_backup.sql
     ```
-2.  Upload `full_backup.sql` to VPS.
+2.  Upload `full_backup.sql` to VPS (via SCP or commit to git if not sensitive).
+    *   *Note: Committing large SQL dumps with user data to GitHub is risky. SCP is better.*
+    ```bash
+    scp full_backup.sql root@your-vps-ip:/opt/whatsappy/
+    ```
 3.  Import into production DB:
     ```bash
     cat full_backup.sql | docker compose -f docker-compose.prod.yml exec -T db psql -U postgres
     ```
 
-## Step 5: Webhook Configuration
+## Step 6: Webhook Configuration
 
 Your Webhook URL for YCloud (and others) will be:
 
@@ -119,12 +127,6 @@ https://chat.yourdomain.com/api/functions/v1/whatsapp-webhook
 2.  Update the Webhook URL to the one above.
 3.  Test by sending a message.
 
-## Notes
-
-- **Mailpit**: We removed Mailpit for production. If you need email (for password resets), configure the SMTP variables in `.env`.
-- **Security**: ensure ports 5432 (DB) and 8000 (Kong) are firewall-protected if you don't want them exposed publicly. Caddy handles 80/443.
-- **Storage**: Data is persisted in `./supabase/volumes`. Back this directory up regularly.
-
 ## Troubleshooting Webhooks
 
 If webhooks fail:
@@ -134,4 +136,3 @@ If webhooks fail:
     ```
 2.  Ensure your domain resolves correctly.
 3.  Ensure the path `/api/functions/v1/...` is correctly routed by trying to `curl` it.
-

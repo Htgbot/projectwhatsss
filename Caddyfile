@@ -7,18 +7,17 @@
 {$DOMAIN} {
     # Frontend
     handle / {
-        reverse_proxy app:80
+        reverse_proxy app:8080
     }
     handle /assets/* {
-        reverse_proxy app:80
+        reverse_proxy app:8080
     }
     handle /* {
-        reverse_proxy app:80
+        reverse_proxy app:8080
     }
 
     # Supabase API Gateway (Kong)
     handle_path /api/* {
-        rewrite * /api{path}
         reverse_proxy kong:8000
     }
     
