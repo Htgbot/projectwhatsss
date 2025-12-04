@@ -47,6 +47,21 @@ docker rm web-1 2>/dev/null || true
 docker compose down --remove-orphans
 docker system prune -f
 
+# 3.5 Optional: Reset Database
+if [ -d "supabase/volumes/db/data" ]; then
+    echo ">>> Found existing database data."
+    echo ">>> Do you want to RESET the database? (Recommended if you are fixing 'supabase-rest' errors)"
+    echo ">>> WARNING: This will DELETE ALL DATA in supabase/volumes/db/data!"
+    read -p ">>> Reset database? (y/N): " RESET_DB
+    if [[ "$RESET_DB" =~ ^[Yy]$ ]]; then
+        echo ">>> Deleting database data..."
+        sudo rm -rf supabase/volumes/db/data
+        echo ">>> Database data deleted. It will be re-initialized on next startup."
+    else
+        echo ">>> Keeping existing database data."
+    fi
+fi
+
 # 4. Build and Start Services
 echo ">>> Building and Starting Services..."
 # We use --build to ensure the frontend picks up the latest env vars (ANON_KEY)
