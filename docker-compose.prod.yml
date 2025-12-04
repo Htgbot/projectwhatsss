@@ -7,11 +7,12 @@ services:
       context: .
       dockerfile: Dockerfile
       args:
-        VITE_SUPABASE_URL: https://${DOMAIN}/api
+        # Use relative path so frontend adapts to whatever domain it's served on
+        VITE_SUPABASE_URL: /api
         VITE_SUPABASE_ANON_KEY: ${ANON_KEY}
     restart: unless-stopped
     environment:
-      VITE_SUPABASE_URL: https://${DOMAIN}/api
+      VITE_SUPABASE_URL: /api
       VITE_SUPABASE_ANON_KEY: ${ANON_KEY}
     depends_on:
       kong:

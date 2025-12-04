@@ -1,6 +1,16 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+// Dynamic URL resolution for Docker/VPS environments
+// If VITE_SUPABASE_URL is not set or is relative, use the current origin + /api
+const getSupabaseUrl = () => {
+  const envUrl = import.meta.env.VITE_SUPABASE_URL;
+  if (envUrl && envUrl.startsWith('http')) {
+    return envUrl;
+  }
+  return `${window.location.origin}/api`;
+};
+
+const supabaseUrl = getSupabaseUrl();
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
