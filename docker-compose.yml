@@ -83,7 +83,8 @@ services:
       test: ["CMD", "wget", "--no-verbose", "--spider", "http://localhost:9999/health"]
       timeout: 5s
       interval: 5s
-      retries: 3
+      retries: 10
+      start_period: 10s
     restart: unless-stopped
     environment:
       GOTRUE_API_HOST: 0.0.0.0
@@ -117,7 +118,8 @@ services:
       test: ["CMD", "wget", "--no-verbose", "--spider", "http://localhost:3000/"]
       timeout: 5s
       interval: 5s
-      retries: 3
+      retries: 10
+      start_period: 10s
 
   # 4. Realtime
   realtime:
@@ -154,7 +156,7 @@ services:
       db:
         condition: service_healthy
       rest:
-        condition: service_started
+        condition: service_healthy
     restart: unless-stopped
     environment:
       ANON_KEY: ${ANON_KEY}
@@ -173,7 +175,8 @@ services:
       test: ["CMD", "wget", "--no-verbose", "--spider", "http://localhost:5000/status"]
       timeout: 5s
       interval: 5s
-      retries: 3
+      retries: 10
+      start_period: 10s
 
   # 6. Postgres Meta
   meta:
