@@ -70,6 +70,14 @@ fi
 echo "🧹 Cleaning up unused Docker images..."
 docker image prune -f
 
+# 4.5 Make scripts executable
+if [ -f "./scripts/fix_auth_permissions.sh" ]; then
+    chmod +x ./scripts/fix_auth_permissions.sh
+fi
+if [ -f "./scripts/restore_db.sh" ]; then
+    chmod +x ./scripts/restore_db.sh
+fi
+
 # 5. Run Diagnostics
 if [ -f "./check_vps.sh" ]; then
     echo "🔍 Running post-deployment diagnostics..."
