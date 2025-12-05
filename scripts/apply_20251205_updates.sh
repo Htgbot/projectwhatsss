@@ -27,4 +27,8 @@ apply_migration "supabase/migrations/20251205_enforce_company_isolation.sql"
 apply_migration "supabase/migrations/20251205_fix_create_managed_user.sql"
 apply_migration "supabase/migrations/20251205_update_api_settings_for_ycloud.sql"
 
+# Force schema cache reload
+echo "🔄 Reloading PostgREST schema cache..."
+apply_migration "supabase/migrations/20251205_reload_schema_cache.sql"
+
 echo "✅ All updates applied successfully!"

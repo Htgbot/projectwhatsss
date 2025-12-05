@@ -1,0 +1,253 @@
+whatsapp.inbound_message.received
+#audio message as
+{
+  "id": "evt_6932ba3b172beb578e2b6deb",
+  "type": "whatsapp.inbound_message.received",
+  "apiVersion": "v2",
+  "createTime": "2025-12-05T10:55:55.432Z",
+  "whatsappInboundMessage": {
+    "id": "6932ba3b53a2a744afa3f5a5",
+    "wamid": "wamid.HBgLOTQ3MjM1Mzk0MzUVAgASGCBBQzkxQTdDM0Q5Q0I1RDMyMjU5M0ZCODI4OUNCQzU3RgA=",
+    "wabaId": "975588924745964",
+    "from": "+94723539435",
+    "customerProfile": {
+      "name": "Hishan"
+    },
+    "to": "+94756918599",
+    "sendTime": "2025-12-05T10:55:52.000Z",
+    "type": "audio",
+    "audio": {
+      "link": "https://api.ycloud.com/v2/whatsapp/media/download/1215216493846185?sig=t%3D1764932152%2Cs%3D02df8db106763c3ec982eaf53d526c5d43277a180831956b82cdb6714ca82b5d&payload=eyJpZCI6IjEyMTUyMTY0OTM4NDYxODUiLCJ3YWJhSWQiOiI5NzU1ODg5MjQ3NDU5NjQiLCJ3YW1pZCI6IndhbWlkLkhCZ0xPVFEzTWpNMU16azBNelVWQWdBU0dDQkJRemt4UVRkRE0wUTVRMEkxUkRNeU1qVTVNMFpDT0RJNE9VTkNRelUzUmdBPSIsIm1pbWVUeXBlIjoiYXVkaW8vb2dnOyBjb2RlY3M9b3B1cyIsInNoYTI1NiI6ImhlYWQ3UVAvaDNEbzdLNjRKWWlQZmNEMi9yUmhHQmYxS1RtTFJRVUZFMTg9In0",
+      "id": "1215216493846185",
+      "sha256": "head7QP/h3Do7K64JYiPfcD2/rRhGBf1KTmLRQUFE18=",
+      "mime_type": "audio/ogg; codecs=opus"
+    }
+  }
+}
+
+
+#image message as
+{
+  "id": "evt_6932b943ff38c55a6c380480",
+  "type": "whatsapp.inbound_message.received",
+  "apiVersion": "v2",
+  "createTime": "2025-12-05T10:51:47.497Z",
+  "whatsappInboundMessage": {
+    "id": "6932b94353a2a744afa3c3a8",
+    "wamid": "wamid.HBgLOTQ3NTcxNzYxNTkVAgASGCBBNTVEOUZERDRCNTYzQTM5REVGQUIxOUJBRjFGQzI2RgA=",
+    "wabaId": "975588924745964",
+    "from": "+94757176159",
+    "customerProfile": {
+      "name": "X_KICHCA"
+    },
+    "to": "+94756918599",
+    "sendTime": "2025-12-05T10:51:45.000Z",
+    "type": "image",
+    "image": {
+      "link": "https://api.ycloud.com/v2/whatsapp/media/download/1511516016570115?sig=t%3D1764931905%2Cs%3Dd1b05a5337ad13b6f0918eb809bcf01400015666d489e17906bf2fec81b0cf4c&payload=eyJpZCI6IjE1MTE1MTYwMTY1NzAxMTUiLCJ3YWJhSWQiOiI5NzU1ODg5MjQ3NDU5NjQiLCJ3YW1pZCI6IndhbWlkLkhCZ0xPVFEzTlRjeE56WXhOVGtWQWdBU0dDQkJOVFZFT1VaRVJEUkNOVFl6UVRNNVJFVkdRVUl4T1VKQlJqRkdRekkyUmdBPSIsIm1pbWVUeXBlIjoiaW1hZ2UvanBlZyIsInNoYTI1NiI6IlNSc0IvbEQzemdxMjZOZThMM01oYkJ4d2IyTXR2Mlg1ai81Vm95ZW51TWM9In0",
+      "id": "1511516016570115",
+      "sha256": "SRsB/lD3zgq26Ne8L3MhbBxwb2Mtv2X5j/5VoyenuMc=",
+      "mime_type": "image/jpeg"
+    }
+  }
+}
+
+#test message as
+{
+  "id": "evt_6932c850172beb578e2f0f91",
+  "type": "whatsapp.inbound_message.received",
+  "apiVersion": "v2",
+  "createTime": "2025-12-05T11:56:00.321Z",
+  "whatsappInboundMessage": {
+    "id": "6932c850ff38c55a6c3bf49f",
+    "wamid": "wamid.HBgLOTQ3NzU4NzU0ODgVAgASGCBBQ0YxQUE3MEJCNzYzNEI4QkI3RDk1MTJEQjZBNEFBQQA=",
+    "wabaId": "975588924745964",
+    "from": "+94775875488",
+    "customerProfile": {
+      "name": "HTG GAMER YT"
+    },
+    "to": "+94756918599",
+    "sendTime": "2025-12-05T11:55:59.000Z",
+    "type": "text",
+    "text": {
+      "body": "Hellow"
+    }
+  }
+}
+
+#reply message as 
+{
+  "id": "evt_6932cd7d3a700d09a89f2948",
+  "type": "whatsapp.inbound_message.received",
+  "apiVersion": "v2",
+  "createTime": "2025-12-05T12:18:05.666Z",
+  "whatsappInboundMessage": {
+    "id": "6932cd7d53a2a744afa903f8",
+    "wamid": "wamid.HBgLOTQ3NzU4NzU0ODgVAgASGCBBQzgxOUI4NzdERjM3ODdGODY2OEU3QkM5NzYxQUZEMQA=",
+    "wabaId": "975588924745964",
+    "from": "+94775875488",
+    "customerProfile": {
+      "name": "HTG GAMER YT"
+    },
+    "to": "+94756918599",
+    "sendTime": "2025-12-05T12:18:04.000Z",
+    "type": "text",
+    "text": {
+      "body": "Reply as"
+    },
+    "context": {
+      "from": "94756918599",
+      "id": "wamid.HBgLOTQ3NzU4NzU0ODgVAgARGBI4MTJERDNFMTgwQTU5QTRDRUMA"
+    }
+  }
+}
+
+
+-------------------------------------------------------------------------------------------------------
+
+
+whatsapp.message.updated
+#message send from us auto 
+#list selct button
+
+{
+  "id": "evt_6932af20c81a270ec52d2d94",
+  "type": "whatsapp.message.updated",
+  "apiVersion": "v2",
+  "createTime": "2025-12-05T10:08:32.924Z",
+  "whatsappMessage": {
+    "id": "6932af1eaf8b7f776e410ece",
+    "wamid": "wamid.HBgLOTQ3MDE4OTExMTkVAgARGBI1QTZEQzcwNjkxOEUwMzJEMTMA",
+    "status": "read",
+    "from": "+94756918599",
+    "to": "+94701891119",
+    "wabaId": "975588924745964",
+    "type": "interactive",
+    "interactive": {
+      "type": "list",
+      "action": {
+        "button": "Select the Payment",
+        "sections": [
+          {
+            "title": "Bank",
+            "rows": [
+              {
+                "id": "bot.json:{\"b\":\"6893a1506104e644b5da0a0f\",\"n\":\"7\",\"h\":\"-1\",\"c\":\"6932af132b14644aeceddbdc\"}",
+                "title": "85758451",
+                "description": "❃ ─⁠☉🏦 BOC - BANK OF CEYLON"
+              },
+              {
+                "id": "bot.json:{\"b\":\"6893a1506104e644b5da0a0f\",\"n\":\"7\",\"h\":\"1\",\"c\":\"6932af132b14644aeceddbdc\"}",
+                "title": "8015495958",
+                "description": "❃ ──⁠☉🏦COMMERCIAL BANK"
+              },
+              {
+                "id": "bot.json:{\"b\":\"6893a1506104e644b5da0a0f\",\"n\":\"7\",\"h\":\"2\",\"c\":\"6932af132b14644aeceddbdc\"}",
+                "title": "001020018914",
+                "description": "❃ ──⁠☉🏦DIALOG FINANCE"
+              },
+              {
+                "id": "bot.json:{\"b\":\"6893a1506104e644b5da0a0f\",\"n\":\"7\",\"h\":\"3\",\"c\":\"6932af132b14644aeceddbdc\"}",
+                "title": "200350104427",
+                "description": "❃ ──⁠☉🏦 Nation Trust Bank"
+              }
+            ]
+          },
+          {
+            "title": "Ez-Cash",
+            "rows": [
+              {
+                "id": "bot.json:{\"b\":\"6893a1506104e644b5da0a0f\",\"n\":\"7\",\"h\":\"4\",\"c\":\"6932af132b14644aeceddbdc\"}",
+                "title": "0775875488",
+                "description": "use the RN to redeem on website or app"
+              }
+            ]
+          },
+          {
+            "title": "Lanka QR",
+            "rows": [
+              {
+                "id": "bot.json:{\"b\":\"6893a1506104e644b5da0a0f\",\"n\":\"7\",\"h\":\"5\",\"c\":\"6932af132b14644aeceddbdc\"}",
+                "title": "Lanka QR",
+                "description": ""
+              }
+            ]
+          }
+        ]
+      },
+      "body": {
+        "text": "🔽 Please tap “Select Payment Method” below and choose how you’d like to pay:\n  • Bank Transfer  \n  • EzCash (send RN)  \n  • Lanka QR (send screenshot)\n\n1️⃣ *Bank Transfer* \n   – Make your transfer, then reply with either a screenshot of the confirmation OR the recipient name & transaction reference.  \n\n2️⃣ *EzCash*  \n   – Send payment to 0775875488  \n   – Reply with the **RN (reference) number** exactly as shown in your EzCash receipt.  \n\n3️⃣ *Lanka QR*  \n   – Scan our HTG QR code in your banking app  \n   – Reply with a screenshot of the “Payment Successful” screen.  \n\n🔑 Once we verify your proof, we’ll send you a *redeem code*.  \n\n➡️ To use your redeem code on our website or app:  \n   1. Go to *Recharge* \n   2. Tap *Redeem Code*  \n   3. Paste your code  \n   4. Click *Process to Pay*  \n\nWe’ll get you topped‑up in seconds! 😊👍"
+      }
+    },
+    "createTime": "2025-12-05T10:08:30.896Z",
+    "updateTime": "2025-12-05T10:08:32.248Z",
+    "sendTime": "2025-12-05T10:08:31.000Z",
+    "readTime": "2025-12-05T10:08:32.000Z",
+    "totalPrice": 0,
+    "pricingCategory": "service",
+    "pricingType": "free_customer_service",
+    "pricingModel": "PMP",
+    "currency": "USD",
+    "regionCode": "LK",
+    "bizType": "whatsapp"
+  }
+}
+
+
+#reply auto as button message so recievr can clcik for reply auto
+{
+  "id": "evt_6932af18ff38c55a6c35dd93",
+  "type": "whatsapp.message.updated",
+  "apiVersion": "v2",
+  "createTime": "2025-12-05T10:08:24.104Z",
+  "whatsappMessage": {
+    "id": "6932af14bfd71c2134e220b9",
+    "wamid": "wamid.HBgLOTQ3MDE4OTExMTkVAgARGBJCMTFCNDFEN0IwOTgwMTA0QzQA",
+    "status": "sent",
+    "from": "+94756918599",
+    "to": "+94701891119",
+    "wabaId": "975588924745964",
+    "type": "interactive",
+    "interactive": {
+      "type": "button",
+      "action": {
+        "buttons": [
+          {
+            "type": "reply",
+            "reply": {
+              "id": "bot.json:{\"b\":\"6893a1506104e644b5da0a0f\",\"n\":\"13\",\"h\":\"-1\",\"c\":\"6932af132b14644aeceddbdc\"}",
+              "title": "Payments Info"
+            }
+          },
+          {
+            "type": "reply",
+            "reply": {
+              "id": "bot.json:{\"b\":\"6893a1506104e644b5da0a0f\",\"n\":\"13\",\"h\":\"1\",\"c\":\"6932af132b14644aeceddbdc\"}",
+              "title": "Web Develop & Seo"
+            }
+          },
+          {
+            "type": "reply",
+            "reply": {
+              "id": "bot.json:{\"b\":\"6893a1506104e644b5da0a0f\",\"n\":\"13\",\"h\":\"2\",\"c\":\"6932af132b14644aeceddbdc\"}",
+              "title": "Games / Software"
+            }
+          }
+        ]
+      },
+      "body": {
+        "text": "Hey Renu FF CUS! 👋\nSo glad you’ve dropped us a message.\n\nOur Services 👇\n├── Web Develop\n│├── Web site full stack develop\n│├── QnA for your Website\n│├── Web Scraping\n│├── AI Marketing\n│├── APP Release on Google\n│├── Re-design Website\n│└── SEO & AISO\n├── Games / Software\n│├── Free Fire Topup\n│├── Pubg Topup\n│├── Pro Apps (Capcut, Terabox)\n│├── Windows 10 / 11\n│├── Office 21 / 24\n│├── Whatsapp Automation\n│└── Social Media Bots\n\nAll in place!\nத‌மி‌ழ் / English\n\n\n💳 Supports Visa Card , Bank Transfer & EzCash payments "
+      }
+    },
+    "createTime": "2025-12-05T10:08:22.523Z",
+    "updateTime": "2025-12-05T10:08:23.205Z",
+    "sendTime": "2025-12-05T10:08:23.000Z",
+    "totalPrice": 0,
+    "pricingCategory": "service",
+    "pricingType": "free_customer_service",
+    "pricingModel": "PMP",
+    "currency": "USD",
+    "regionCode": "LK",
+    "bizType": "whatsapp"
+  }
+}
