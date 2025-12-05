@@ -104,7 +104,7 @@ BEGIN
             '',
             '',
             false, -- is_super_admin column in auth.users is usually for Supabase internal admin, but we use public.user_profiles
-            '{"provider":"email","providers":["email"]}',
+            '{\"provider\":\"email\",\"providers\":[\"email\"]}',
             '{}'
         );
         
