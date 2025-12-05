@@ -48,5 +48,11 @@ else
 fi
 rm curl_output.txt
 
+# 6. Check Database Tables
+echo "----------------------------------------"
+echo "🗄️ Checking Database Tables..."
+echo "Listing all tables in public schema:"
+docker compose exec -T db psql -U postgres -d postgres -c "\dt public.*"
+
 echo "----------------------------------------"
 echo "✅ Diagnostics Complete."
