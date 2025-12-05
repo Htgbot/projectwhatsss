@@ -18,6 +18,7 @@ function sign(payload, secret) {
 const jwtSecret = crypto.randomBytes(32).toString('hex');
 const postgresPassword = crypto.randomBytes(16).toString('hex');
 const realtimeKey = crypto.randomBytes(32).toString('hex');
+const secretKeyBase = crypto.randomBytes(64).toString('hex');
 
 // Generate tokens
 const anonPayload = { role: 'anon', iss: 'supabase', iat: Math.floor(Date.now()/1000), exp: Math.floor(Date.now()/1000) + 3153600000 };
@@ -42,6 +43,7 @@ SERVICE_ROLE_KEY=${serviceRoleKey}
 
 # Realtime Configuration
 REALTIME_DB_ENC_KEY=${realtimeKey}
+SECRET_KEY_BASE=${secretKeyBase}
 
 # SMTP Configuration (Optional but recommended for Production)
 # SMTP_HOST=smtp.example.com

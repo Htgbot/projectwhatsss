@@ -30,9 +30,28 @@ docker compose up -d db
 echo "⏳ Waiting for database to be ready..."
 sleep 10
 
-# Fix missing auth.factor_type if needed (prevents supabase-auth crash)
-echo "🛠️ Ensuring auth.factor_type exists and has correct owner..."
-docker compose exec -T db psql -U postgres -d postgres -c "DO \$\$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'factor_type') THEN CREATE TYPE auth.factor_type AS ENUM ('totp', 'webauthn', 'phone'); END IF; END \$\$; ALTER TYPE auth.factor_type OWNER TO supabase_auth_admin;" || echo "⚠️ Warning: Could not create/fix factor_type"
+# Fix missing auth.factor_type and permissions (prevents supabase-auth crash)
+echo "🛠️ Ensuring auth.factor_type exists and fixing permissions..."
+docker compose exec -T db psql -U postgres -d postgres -c "
+DO \$\$ 
+BEGIN 
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'factor_type') THEN 
+        CREATE TYPE auth.factor_type AS ENUM ('totp', 'webauthn', 'phone'); 
+    END IF; 
+END \$\$;
+
+-- Fix ownership of the type
+ALTER TYPE auth.factor_type OWNER TO supabase_auth_admin;
+
+-- Grant full permissions to supabase_auth_admin on auth schema
+GRANT USAGE ON SCHEMA auth TO supabase_auth_admin;
+GRANT ALL ON ALL TABLES IN SCHEMA auth TO supabase_auth_admin;
+GRANT ALL ON ALL SEQUENCES IN SCHEMA auth TO supabase_auth_admin;
+GRANT ALL ON ALL ROUTINES IN SCHEMA auth TO supabase_auth_admin;
+
+-- Ensure search_path is correct
+ALTER ROLE supabase_auth_admin SET search_path = 'auth', 'public';
+" || echo "⚠️ Warning: Could not apply auth fixes (DB might not be ready yet)"
 
 # 3. Rebuild and restart containers
 echo "🔄 Rebuilding and restarting Docker containers..."
