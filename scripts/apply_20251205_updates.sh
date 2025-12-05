@@ -21,10 +21,10 @@ apply_migration() {
 }
 
 # Apply migrations in order
-apply_migration "supabase/migrations/20251205_00_ensure_core_tables.sql"
-apply_migration "supabase/migrations/20251205_add_business_number_status.sql"
-apply_migration "supabase/migrations/20251205_add_unique_constraint_api_settings.sql"
-apply_migration "supabase/migrations/20251205_enforce_company_isolation.sql"
+# This master fix file consolidates previous fixes into one idempotent script
+apply_migration "supabase/migrations/20251205_99_consolidated_master_fix.sql"
+
+# Apply other specific fixes if needed (idempotent)
 apply_migration "supabase/migrations/20251205_fix_create_managed_user.sql"
 apply_migration "supabase/migrations/20251205_update_api_settings_for_ycloud.sql"
 
