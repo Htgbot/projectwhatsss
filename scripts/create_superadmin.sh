@@ -40,8 +40,8 @@ DECLARE
     target_uid UUID;
     encrypted_pw TEXT;
 BEGIN
-    -- Generate hashed password using explicit schema
-    encrypted_pw := extensions.crypt(target_password, extensions.gen_salt('bf'));
+    -- Generate hashed password using explicit schema with cost 10 (GoTrue standard)
+    encrypted_pw := extensions.crypt(target_password, extensions.gen_salt('bf', 10));
     
     -- Check if user exists
     SELECT id INTO target_uid FROM auth.users WHERE email = target_email;
