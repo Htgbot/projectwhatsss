@@ -16,7 +16,25 @@
         reverse_proxy app:8080
     }
 
+
     # Supabase API Gateway (Kong)
+    # Route Realtime directly to the Realtime container to ensure WebSocket stability
+    # This more specific route must come BEFORE the generic /api/* route
+    handle_path /api/realtime/v1/* {
+        reverse_proxy realtime:4000 {
+            header_up Host {host}
+            header_up X-Real-IP {remote}
+            header_up X-Forwarded-For {remote}
+            header_up X-Forwarded-Proto {scheme}
+            header_up Upgrade {http.request.header.Upgrade}
+            header_up Connection {http.request.header.Connection}
+            header_up Sec-WebSocket-Key {http.request.header.Sec-WebSocket-Key}
+            header_up Sec-WebSocket-Version {http.request.header.Sec-WebSocket-Version}
+            header_up Sec-WebSocket-Extensions {http.request.header.Sec-WebSocket-Extensions}
+            header_up Sec-WebSocket-Protocol {http.request.header.Sec-WebSocket-Protocol}
+        }
+    }
+
     handle_path /api/* {
         reverse_proxy kong:8000 {
             header_up Host {host}
@@ -27,6 +45,12 @@
             # WebSocket support
             header_up Upgrade {http.request.header.Upgrade}
             header_up Connection {http.request.header.Connection}
+            header_up Sec-WebSocket-Key {http.request.header.Sec-WebSocket-Key}
+            header_up Sec-WebSocket-Version {http.request.header.Sec-WebSocket-Version}
+            header_up Sec-WebSocket-Extensions {http.request.header.Sec-WebSocket-Extensions}
+            header_up Sec-WebSocket-Protocol {http.request.header.Sec-WebSocket-Protocol}
+        }
+    }
             header_up Sec-WebSocket-Key {http.request.header.Sec-WebSocket-Key}
             header_up Sec-WebSocket-Version {http.request.header.Sec-WebSocket-Version}
             header_up Sec-WebSocket-Extensions {http.request.header.Sec-WebSocket-Extensions}
