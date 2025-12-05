@@ -51,12 +51,6 @@
             header_up Sec-WebSocket-Protocol {http.request.header.Sec-WebSocket-Protocol}
         }
     }
-            header_up Sec-WebSocket-Key {http.request.header.Sec-WebSocket-Key}
-            header_up Sec-WebSocket-Version {http.request.header.Sec-WebSocket-Version}
-            header_up Sec-WebSocket-Extensions {http.request.header.Sec-WebSocket-Extensions}
-            header_up Sec-WebSocket-Protocol {http.request.header.Sec-WebSocket-Protocol}
-        }
-    }
 
     # Handle functions directly if /api prefix is missing
     handle /functions/* {
