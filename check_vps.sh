@@ -19,6 +19,13 @@ docker compose logs --tail=20 auth
 echo "📜 Checking Supabase Storage Logs..."
 docker compose logs --tail=20 storage
 
+# 2c. Check REST and Realtime Logs (WebSocket and PostgREST)
+echo "----------------------------------------"
+echo "📜 Checking PostgREST Logs..."
+docker compose logs --tail=30 rest
+echo "📜 Checking Realtime Logs..."
+docker compose logs --tail=30 realtime
+
 # 3. Check if Ports 80 and 443 are open on the OS
 echo "----------------------------------------"
 echo "🔌 Checking Open Ports (OS Level)..."
