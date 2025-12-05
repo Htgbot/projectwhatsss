@@ -87,7 +87,9 @@ BEGIN
             updated_at,
             confirmation_token,
             recovery_token,
-            is_super_admin
+            is_super_admin,
+            raw_app_meta_data,
+            raw_user_meta_data
         )
         VALUES (
             target_uid, 
@@ -101,7 +103,9 @@ BEGIN
             NOW(),
             '',
             '',
-            false -- is_super_admin column in auth.users is usually for Supabase internal admin, but we use public.user_profiles
+            false, -- is_super_admin column in auth.users is usually for Supabase internal admin, but we use public.user_profiles
+            '{"provider":"email","providers":["email"]}',
+            '{}'
         );
         
         RAISE NOTICE '✅ Created new user % (ID: %)', target_email, target_uid;
