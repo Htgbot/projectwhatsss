@@ -9,7 +9,32 @@ echo "🚀 Starting Deployment..."
 echo "📥 Pulling latest changes from Git..."
 git pull origin master
 
-# 2. Rebuild and restart containers
+# 1.5 Check and Generate .env if missing
+if [ ! -f ".env" ]; then
+    echo "⚠️ .env file not found. Generating one with secure keys..."
+    if [ -f "./scripts/generate_env_standalone.cjs" ]; then
+        # Use a temporary Node container to run the generation script
+        # This avoids needing Node installed on the host
+        docker run --rm -v "$(pwd):/app" -w /app node:20-alpine node scripts/generate_env_standalone.cjs
+        echo "✅ .env generated successfully."
+    else
+        echo "❌ Error: scripts/generate_env_standalone.cjs not found!"
+        exit 1
+    fi
+fi
+
+# 2. Pre-fix: Ensure DB is ready and fix potentially missing types
+echo "🔧 Preparing database..."
+docker compose up -d db
+# Wait for DB to be ready (simple sleep or healthcheck loop)
+echo "⏳ Waiting for database to be ready..."
+sleep 10
+
+# Fix missing auth.factor_type if needed (prevents supabase-auth crash)
+echo "🛠️ Ensuring auth.factor_type exists..."
+docker compose exec -T db psql -U postgres -d postgres -c "DO \$\$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'factor_type') THEN CREATE TYPE auth.factor_type AS ENUM ('totp', 'webauthn', 'phone'); END IF; END \$\$;" || echo "⚠️ Warning: Could not create factor_type (might already exist or DB not ready)"
+
+# 3. Rebuild and restart containers
 echo "🔄 Rebuilding and restarting Docker containers..."
 # We use --build to ensure the 'app' container gets the latest code
 # --wait ensures services are healthy before proceeding

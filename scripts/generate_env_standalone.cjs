@@ -2,7 +2,6 @@ const fs = require('fs');
 const crypto = require('crypto');
 const path = require('path');
 
-const envExamplePath = path.join(__dirname, '../.env.prod.example');
 const envPath = path.join(__dirname, '../.env');
 
 function sign(payload, secret) {
@@ -27,21 +26,30 @@ const servicePayload = { role: 'service_role', iss: 'supabase', iat: Math.floor(
 const anonKey = sign(anonPayload, jwtSecret);
 const serviceRoleKey = sign(servicePayload, jwtSecret);
 
-console.log('Generated Secrets:');
-console.log('JWT Secret:', jwtSecret);
-console.log('Postgres Password:', postgresPassword);
+const content = `# Domain Configuration
+DOMAIN=whtshtg.lkdevs.com
 
-// Read example
-let content = fs.readFileSync(envExamplePath, 'utf8');
+# Postgres Configuration
+POSTGRES_PASSWORD=${postgresPassword}
 
-// Replace values
-content = content.replace(/^DOMAIN=.*/m, 'DOMAIN=whtshtg.lkdevs.com');
-content = content.replace(/^POSTGRES_PASSWORD=.*/m, `POSTGRES_PASSWORD=${postgresPassword}`);
-content = content.replace(/^JWT_SECRET=.*/m, `JWT_SECRET=${jwtSecret}`);
-content = content.replace(/^ANON_KEY=.*/m, `ANON_KEY=${anonKey}`);
-content = content.replace(/^SERVICE_ROLE_KEY=.*/m, `SERVICE_ROLE_KEY=${serviceRoleKey}`);
-content = content.replace(/^REALTIME_DB_ENC_KEY=.*/m, `REALTIME_DB_ENC_KEY=${realtimeKey}`);
+# JWT Configuration
+# Generate a secure random string (at least 32 chars)
+JWT_SECRET=${jwtSecret}
 
-// Write .env
+# Supabase Keys
+ANON_KEY=${anonKey}
+SERVICE_ROLE_KEY=${serviceRoleKey}
+
+# Realtime Configuration
+REALTIME_DB_ENC_KEY=${realtimeKey}
+
+# SMTP Configuration (Optional but recommended for Production)
+# SMTP_HOST=smtp.example.com
+# SMTP_PORT=587
+# SMTP_USER=your-user
+# SMTP_PASS=your-password
+# SMTP_ADMIN_EMAIL=admin@your-domain.com
+`;
+
 fs.writeFileSync(envPath, content);
 console.log('.env file created successfully at', envPath);
