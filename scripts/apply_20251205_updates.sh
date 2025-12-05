@@ -21,6 +21,7 @@ apply_migration() {
 }
 
 # Apply migrations in order
+apply_migration "supabase/migrations/20251205_00_ensure_core_tables.sql"
 apply_migration "supabase/migrations/20251205_add_business_number_status.sql"
 apply_migration "supabase/migrations/20251205_add_unique_constraint_api_settings.sql"
 apply_migration "supabase/migrations/20251205_enforce_company_isolation.sql"
