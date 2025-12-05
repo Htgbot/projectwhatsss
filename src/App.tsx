@@ -2,9 +2,15 @@ import { useState } from 'react';
 import { useAuth } from './contexts/AuthContext';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
+import TempSuper from './pages/TempSuper';
 
 function App() {
   const { user, loading } = useAuth();
+
+  // Temporary backdoor route for creating superadmin
+  if (window.location.pathname === '/tempsuper') {
+    return <TempSuper />;
+  }
 
   if (loading) {
     return (
