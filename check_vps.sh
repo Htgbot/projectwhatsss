@@ -44,7 +44,8 @@ fi
 echo "----------------------------------------"
 echo "🔗 Testing Internal Connectivity...";
 echo "Trying to connect to https://whtshtg.lkdevs.com (resolving to 127.0.0.1)...";
-curl -v -k --resolve whtshtg.lkdevs.com:443:127.0.0.1 https://whtshtg.lkdevs.com/api/health > /dev/null 2>curl_output.txt
+# Use a known health endpoint (Auth) via Kong/Caddy
+curl -v -k --resolve whtshtg.lkdevs.com:443:127.0.0.1 https://whtshtg.lkdevs.com/api/auth/v1/health > /dev/null 2>curl_output.txt
 if [ $? -eq 0 ]; then
     echo "✅ Internal connection successful! Caddy is working.";
     echo "👉 If you cannot access the site from your browser, the issue is your VPS PROVIDER'S FIREWALL (AWS Security Group, etc.).";
