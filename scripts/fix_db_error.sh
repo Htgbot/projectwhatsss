@@ -1,61 +1,57 @@
 #!/bin/bash
 
-# Fix "Database error finding user" Script
+# Fix Database Errors Script
 # Usage: ./scripts/fix_db_error.sh
 
-echo "🔧 Diagnosing and fixing 'Database error finding user'..."
+echo "🔧 Diagnosing and fixing database issues..."
 
-# 1. Fix Search Path and Extensions
-echo "   - Configuring search_path and extensions..."
+# 1. Apply the fix_auth_trigger migration directly
+echo "   - Applying auth trigger fixes..."
 docker compose exec -T db psql -U postgres -d postgres -c "
 -- Create extensions schema if not exists
 CREATE SCHEMA IF NOT EXISTS extensions;
 
--- Ensure pgcrypto exists in extensions schema
+-- Ensure pgcrypto exists
 CREATE EXTENSION IF NOT EXISTS \"pgcrypto\" SCHEMA extensions;
 
--- Grant usage on extensions to supabase_auth_admin and postgres
-GRANT USAGE ON SCHEMA extensions TO supabase_auth_admin;
-GRANT USAGE ON SCHEMA extensions TO postgres;
+-- Grant usage on extensions
+GRANT USAGE ON SCHEMA extensions TO supabase_auth_admin, postgres, authenticated, anon, service_role;
+GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA extensions TO supabase_auth_admin, postgres, authenticated, anon, service_role;
 
--- Grant execute on functions in extensions
-GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA extensions TO supabase_auth_admin;
-GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA extensions TO postgres;
-
--- Update search_path for supabase_auth_admin to include extensions
+-- Fix search path for supabase_auth_admin
 ALTER ROLE supabase_auth_admin SET search_path = 'auth', 'public', 'extensions';
-
--- Update search_path for postgres user as well just in case
 ALTER ROLE postgres SET search_path = 'public', 'extensions', 'auth';
 
--- Ensure auth.users owner is correct
-ALTER TABLE auth.users OWNER TO supabase_auth_admin;
-"
-
-# 2. Check and Fix Triggers
-echo "   - Checking for broken triggers..."
-docker compose exec -T db psql -U postgres -d postgres -c "
-DO \$\$
-DECLARE
-    t record;
+-- Create or replace the handle_new_user function
+CREATE OR REPLACE FUNCTION public.handle_new_user() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path = public
+    AS \$\$
 BEGIN
-    -- Just a simple check, we can't easily validate PL/pgSQL body here without running it
-    -- But we can ensure the trigger functions exist
-    FOR t IN 
-        SELECT tgname, proname 
-        FROM pg_trigger 
-        JOIN pg_proc ON pg_trigger.tgfoid = pg_proc.oid 
-        WHERE tgrelid = 'auth.users'::regclass
-    LOOP
-        RAISE NOTICE 'Found trigger: % calling %', t.tgname, t.proname;
-    END LOOP;
-END \$\$;
+  INSERT INTO public.user_profiles (id, email, role, status)
+  VALUES (new.id, new.email, 'admin', 'active')
+  ON CONFLICT (id) DO NOTHING;
+  RETURN new;
+END;
+\$\$;
+
+-- Grant execute permission
+GRANT EXECUTE ON FUNCTION public.handle_new_user() TO supabase_auth_admin;
+
+-- Ensure the trigger exists
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+CREATE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
 "
 
-# 3. Verify auth.users sequence (if any)
-# Sometimes sequence gets out of sync if manual inserts happened, but auth.users uses UUID so it's fine.
-
-echo "🔄 Restarting supabase-auth service to pick up changes..."
+# 2. Restart Services
+echo "🔄 Restarting services to pick up changes..."
+# Restart auth to ensure it picks up the new search path
 docker compose restart auth
+
+# Rebuild and restart app (correct service name is 'app', not 'web')
+echo "   - Rebuilding frontend (app)..."
+docker compose up -d --build app
 
 echo "✅ Database fixes applied. Please try creating the user again at /tempsuper"
