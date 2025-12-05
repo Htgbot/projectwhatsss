@@ -41,11 +41,8 @@ services:
         condition: service_started
       kong:
         condition: service_started
-    healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--spider", "http://127.0.0.1:2019/metrics"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+    # Healthcheck removed: Caddy's admin endpoint (2019) is disabled by default,
+    # which causes false negatives and blocks `docker compose --wait`.
 
   # --- Supabase Stack ---
   
