@@ -74,14 +74,14 @@ CREATE POLICY "Users can view company api settings"
 ON public.api_settings FOR SELECT
 TO authenticated
 USING (
-  (company_id = (SELECT company_id FROM public.user_profiles WHERE id = auth.uid())) OR
-  ((SELECT role FROM public.user_profiles WHERE id = auth.uid()) = 'superadmin')
+  (company_id = get_my_company_id()) OR
+  (get_my_role() = 'superadmin')
 );
 
 CREATE POLICY "Users can manage company api settings"
 ON public.api_settings FOR ALL
 TO authenticated
 USING (
-  (company_id = (SELECT company_id FROM public.user_profiles WHERE id = auth.uid())) OR
-  ((SELECT role FROM public.user_profiles WHERE id = auth.uid()) = 'superadmin')
+  (company_id = get_my_company_id()) OR
+  (get_my_role() = 'superadmin')
 );
