@@ -73,6 +73,7 @@ export interface BusinessNumber {
   is_default: boolean;
   user_id: string | null;
   company_id: string | null;
+  status: 'pending' | 'active' | 'rejected';
   created_at: string;
 }
 

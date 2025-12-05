@@ -6,9 +6,10 @@ import { useAuth } from '../contexts/AuthContext';
 interface UserManagementProps {
   onBack: () => void;
   onNavigateToSettings?: () => void;
+  isEmbedded?: boolean;
 }
 
-export default function UserManagement({ onBack, onNavigateToSettings }: UserManagementProps) {
+export default function UserManagement({ onBack, onNavigateToSettings, isEmbedded = false }: UserManagementProps) {
   const { isSuperAdmin, isAdmin, profile, company: currentCompany } = useAuth();
   const [activeTab, setActiveTab] = useState<'users' | 'companies'>('users');
   
@@ -154,77 +155,129 @@ export default function UserManagement({ onBack, onNavigateToSettings }: UserMan
   }
 
   return (
-    <div className="flex-1 flex flex-col bg-white w-full">
-      <div className="bg-[#008069] md:bg-[#f0f2f5] border-b border-gray-200 px-3 md:px-4 py-3 md:py-4 flex flex-col gap-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3 md:gap-4 flex-1 min-w-0">
-            <button
-              onClick={onBack}
-              className="p-2 hover:bg-[#017561] md:hover:bg-gray-200 rounded-full transition-colors flex-shrink-0"
-            >
-              <ArrowLeft className="w-5 h-5 text-white md:text-gray-700" />
-            </button>
-            <h1 className="text-lg md:text-xl font-semibold text-white md:text-gray-900 truncate">
-              {isSuperAdmin ? 'System Management' : 'Team Management'}
-            </h1>
-          </div>
-          
-          <div className="flex items-center gap-2">
-            {onNavigateToSettings && (
+    <div className={`flex-1 flex flex-col bg-white w-full ${isEmbedded ? 'h-full' : ''}`}>
+      {!isEmbedded && (
+        <div className="bg-[#008069] md:bg-[#f0f2f5] border-b border-gray-200 px-3 md:px-4 py-3 md:py-4 flex flex-col gap-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3 md:gap-4 flex-1 min-w-0">
               <button
-                onClick={onNavigateToSettings}
-                className="p-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
-                title="Settings"
+                onClick={onBack}
+                className="p-2 hover:bg-[#017561] md:hover:bg-gray-200 rounded-full transition-colors flex-shrink-0"
               >
-                <SettingsIcon className="w-5 h-5" />
+                <ArrowLeft className="w-5 h-5 text-white md:text-gray-700" />
               </button>
-            )}
+              <h1 className="text-lg md:text-xl font-semibold text-white md:text-gray-900 truncate">
+                {isSuperAdmin ? 'System Management' : 'Team Management'}
+              </h1>
+            </div>
             
-            {activeTab === 'users' ? (
+            <div className="flex items-center gap-2">
+              {onNavigateToSettings && (
+                <button
+                  onClick={onNavigateToSettings}
+                  className="p-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+                  title="Settings"
+                >
+                  <SettingsIcon className="w-5 h-5" />
+                </button>
+              )}
+              
+              {activeTab === 'users' ? (
+                <button
+                  onClick={() => setShowAddUser(!showAddUser)}
+                  className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                >
+                  <UserPlus className="w-4 h-4" />
+                  <span className="hidden md:inline">Add User</span>
+                </button>
+              ) : (
+                 <button
+                  onClick={() => setShowAddCompany(!showAddCompany)}
+                  className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                >
+                  <Building2 className="w-4 h-4" />
+                  <span className="hidden md:inline">Add Company</span>
+                </button>
+              )}
+            </div>
+          </div>
+
+          {isSuperAdmin && (
+            <div className="flex gap-4 border-b border-gray-200/20">
               <button
-                onClick={() => setShowAddUser(!showAddUser)}
-                className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                onClick={() => setActiveTab('users')}
+                className={`pb-2 text-sm font-medium ${
+                  activeTab === 'users'
+                    ? 'text-white md:text-green-600 border-b-2 border-white md:border-green-600'
+                    : 'text-green-100 md:text-gray-500 hover:text-white md:hover:text-gray-700'
+                }`}
               >
-                <UserPlus className="w-4 h-4" />
-                <span className="hidden md:inline">Add User</span>
+                Users
               </button>
-            ) : (
-               <button
-                onClick={() => setShowAddCompany(!showAddCompany)}
-                className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+              <button
+                onClick={() => setActiveTab('companies')}
+                className={`pb-2 text-sm font-medium ${
+                  activeTab === 'companies'
+                    ? 'text-white md:text-green-600 border-b-2 border-white md:border-green-600'
+                    : 'text-green-100 md:text-gray-500 hover:text-white md:hover:text-gray-700'
+                }`}
               >
-                <Building2 className="w-4 h-4" />
-                <span className="hidden md:inline">Add Company</span>
+                Companies
               </button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Embedded Header Controls */}
+      {isEmbedded && (
+        <div className="px-6 py-4 border-b border-gray-200 bg-white flex justify-between items-center sticky top-0 z-10">
+          <div className="flex gap-4">
+            {isSuperAdmin && (
+              <>
+                <button
+                  onClick={() => setActiveTab('users')}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    activeTab === 'users'
+                      ? 'bg-green-50 text-green-700 border border-green-200'
+                      : 'text-gray-600 hover:bg-gray-50'
+                  }`}
+                >
+                  Users
+                </button>
+                <button
+                  onClick={() => setActiveTab('companies')}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    activeTab === 'companies'
+                      ? 'bg-green-50 text-green-700 border border-green-200'
+                      : 'text-gray-600 hover:bg-gray-50'
+                  }`}
+                >
+                  Companies
+                </button>
+              </>
             )}
           </div>
-        </div>
 
-        {isSuperAdmin && (
-          <div className="flex gap-4 border-b border-gray-200/20">
+          {activeTab === 'users' ? (
             <button
-              onClick={() => setActiveTab('users')}
-              className={`pb-2 text-sm font-medium ${
-                activeTab === 'users'
-                  ? 'text-white md:text-green-600 border-b-2 border-white md:border-green-600'
-                  : 'text-green-100 md:text-gray-500 hover:text-white md:hover:text-gray-700'
-              }`}
+              onClick={() => setShowAddUser(!showAddUser)}
+              className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm"
             >
-              Users
+              <UserPlus className="w-4 h-4" />
+              <span>Add User</span>
             </button>
-            <button
-              onClick={() => setActiveTab('companies')}
-              className={`pb-2 text-sm font-medium ${
-                activeTab === 'companies'
-                  ? 'text-white md:text-green-600 border-b-2 border-white md:border-green-600'
-                  : 'text-green-100 md:text-gray-500 hover:text-white md:hover:text-gray-700'
-              }`}
+          ) : (
+             <button
+              onClick={() => setShowAddCompany(!showAddCompany)}
+              className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm"
             >
-              Companies
+              <Building2 className="w-4 h-4" />
+              <span>Add Company</span>
             </button>
-          </div>
-        )}
-      </div>
+          )}
+        </div>
+      )}
 
       <div className="flex-1 overflow-y-auto p-3 md:p-6">
         <div className="max-w-4xl mx-auto">

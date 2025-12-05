@@ -161,13 +161,24 @@ async function handleIncomingMessage(supabase: any, webhookData: any) {
     }
 
     // Find company_id for the business number
+    // Only process messages for ACTIVE (approved) business numbers
     const { data: businessNumber } = await supabase
         .from('business_numbers')
-        .select('company_id')
+        .select('company_id, status')
         .eq('phone_number', to)
         .maybeSingle();
         
-    const companyId = businessNumber?.company_id;
+    if (!businessNumber) {
+      console.log(`No business number found for ${to}. Ignoring message.`);
+      return;
+    }
+
+    if (businessNumber.status !== 'active') {
+      console.log(`Business number ${to} is not active (Status: ${businessNumber.status}). Ignoring message.`);
+      return;
+    }
+
+    const companyId = businessNumber.company_id;
 
     // Find or create conversation
     let { data: conversation } = await supabase

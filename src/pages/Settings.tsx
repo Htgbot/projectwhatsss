@@ -502,6 +502,20 @@ export default function Settings({ onBack, onNavigateToUsers }: SettingsProps) {
                   <div>
                     <p className="font-medium text-gray-900">{number.display_name}</p>
                     <p className="text-sm text-gray-600">{number.phone_number}</p>
+                    <div className="mt-1 flex items-center gap-2">
+                      <span className={`text-xs px-2 py-0.5 rounded-full ${
+                        number.status === 'active' ? 'bg-green-100 text-green-800' :
+                        number.status === 'rejected' ? 'bg-red-100 text-red-800' :
+                        'bg-yellow-100 text-yellow-800'
+                      }`}>
+                        {number.status ? number.status.toUpperCase() : 'PENDING'}
+                      </span>
+                      {number.is_default && (
+                        <span className="text-xs px-2 py-0.5 bg-blue-100 text-blue-800 rounded-full">
+                          Default
+                        </span>
+                      )}
+                    </div>
                   </div>
                   <button
                     onClick={() => handleDeleteNumber(number.id)}

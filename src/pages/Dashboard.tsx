@@ -1,14 +1,16 @@
 import { useState } from 'react';
-import { MessageSquare, Settings as SettingsIcon, Users, LogOut, Menu, X } from 'lucide-react';
+import { MessageSquare, Settings as SettingsIcon, Users, LogOut, Menu, X, Phone, Shield } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import ConversationList from '../components/ConversationList';
 import ChatWindow from '../components/ChatWindow';
 import NewConversationModal from '../components/NewConversationModal';
 import Settings from './Settings';
 import UserManagement from './UserManagement';
+import NumberApprovals from './NumberApprovals';
+import SuperAdminPanel from './SuperAdminPanel';
 import { Conversation } from '../lib/supabase';
 
-type Tab = 'chats' | 'settings' | 'users';
+type Tab = 'chats' | 'settings' | 'users' | 'approvals' | 'superadmin';
 
 export default function Dashboard() {
   const { signOut, isSuperAdmin, isAdmin, isWorker, profile } = useAuth();
@@ -62,7 +64,18 @@ export default function Dashboard() {
                   <span className="text-gray-900">Settings</span>
                 </button>
               )}
-              {(isSuperAdmin || isAdmin) && (
+              {isSuperAdmin ? (
+                <button
+                  onClick={() => {
+                    setActiveTab('superadmin');
+                    setShowMobileMenu(false);
+                  }}
+                  className="w-full px-4 py-3 text-left hover:bg-gray-100 flex items-center gap-3"
+                >
+                  <Shield className="w-5 h-5 text-purple-600" />
+                  <span className="text-gray-900">Super Admin Panel</span>
+                </button>
+              ) : isAdmin && (
                 <button
                   onClick={() => {
                     setActiveTab('users');
@@ -72,9 +85,7 @@ export default function Dashboard() {
                 >
                   <Users className="w-5 h-5 text-blue-600" />
                   <span className="text-gray-900">User Management</span>
-                  <span className="ml-auto px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full">
-                    {isSuperAdmin ? 'Super Admin' : 'Admin'}
-                  </span>
+                  <span className="ml-auto px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full">Admin</span>
                 </button>
               )}
               <button
@@ -116,7 +127,15 @@ export default function Dashboard() {
                     <SettingsIcon className="w-6 h-6 text-gray-700" />
                   </button>
                 )}
-                {(isSuperAdmin || isAdmin) && (
+                {isSuperAdmin ? (
+                  <button
+                    onClick={() => setActiveTab('superadmin')}
+                    className="p-2.5 bg-purple-600 hover:bg-purple-700 rounded-full transition-colors shadow-lg"
+                    title="Super Admin Panel"
+                  >
+                    <Shield className="w-6 h-6 text-white" />
+                  </button>
+                ) : isAdmin && (
                   <button
                     onClick={() => setActiveTab('users')}
                     className="p-2.5 bg-blue-500 hover:bg-blue-600 rounded-full transition-colors shadow-lg"
@@ -170,6 +189,10 @@ export default function Dashboard() {
           onBack={() => setActiveTab('chats')}
           onNavigateToUsers={(isSuperAdmin || isAdmin) ? () => setActiveTab('users') : undefined}
         />
+      ) : activeTab === 'superadmin' ? (
+        <SuperAdminPanel onBack={() => setActiveTab('chats')} />
+      ) : activeTab === 'approvals' ? (
+        <NumberApprovals onBack={() => setActiveTab('chats')} />
       ) : (
         <UserManagement
           onBack={() => setActiveTab('chats')}
