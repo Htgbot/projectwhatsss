@@ -13,6 +13,11 @@ if [ -z "$EMAIL" ] || [ -z "$PASSWORD" ]; then
   exit 1
 fi
 
+# Escape single quotes for SQL ( ' becomes '' )
+# This handles passwords like "don't" becoming "don''t" which is valid SQL
+SAFE_EMAIL=${EMAIL//\'/\'\'}
+SAFE_PASSWORD=${PASSWORD//\'/\'\'}
+
 echo "🔧 Creating/Updating superadmin user '$EMAIL'..."
 
 # Check if pgcrypto exists to avoid permission errors on re-creation attempts
@@ -25,11 +30,13 @@ else
     echo "✅ pgcrypto extension verified."
 fi
 
-docker compose exec -T db psql -U postgres -d postgres -c "
+# Execute the PL/pgSQL block using a Here-Document passed to stdin.
+# This avoids shell quoting issues with JSON strings.
+docker compose exec -T db psql -U postgres -d postgres <<EOF
 DO \$\$
 DECLARE
-    target_email TEXT := '$EMAIL';
-    target_password TEXT := '$PASSWORD';
+    target_email TEXT := '$SAFE_EMAIL';
+    target_password TEXT := '$SAFE_PASSWORD';
     target_uid UUID;
     encrypted_pw TEXT;
 BEGIN
@@ -44,7 +51,9 @@ BEGIN
         UPDATE auth.users 
         SET encrypted_password = encrypted_pw, 
             email_confirmed_at = NOW(),
-            updated_at = NOW()
+            updated_at = NOW(),
+            raw_app_meta_data = '{"provider":"email","providers":["email"]}',
+            raw_user_meta_data = '{}'
         WHERE id = target_uid;
         
         -- Ensure identity exists (fixes cases where previous insert failed)
@@ -104,7 +113,7 @@ BEGIN
             '',
             '',
             false, -- is_super_admin column in auth.users is usually for Supabase internal admin, but we use public.user_profiles
-            '{\"provider\":\"email\",\"providers\":[\"email\"]}',
+            '{"provider":"email","providers":["email"]}',
             '{}'
         );
         
@@ -141,4 +150,4 @@ BEGIN
     
     RAISE NOTICE '✅ User % promoted to superadmin in user_profiles.', target_email;
 END \$\$;
-"
+EOF
