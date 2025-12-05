@@ -12,6 +12,13 @@ echo "----------------------------------------"
 echo "📜 Checking Caddy Logs (Last 50 lines)..."
 docker compose logs --tail=50 caddy
 
+# 2b. Check Auth and Storage Logs (Crucial for Login/Files)
+echo "----------------------------------------"
+echo "📜 Checking Supabase Auth Logs..."
+docker compose logs --tail=20 auth
+echo "📜 Checking Supabase Storage Logs..."
+docker compose logs --tail=20 storage
+
 # 3. Check if Ports 80 and 443 are open on the OS
 echo "----------------------------------------"
 echo "🔌 Checking Open Ports (OS Level)..."

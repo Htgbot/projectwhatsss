@@ -84,7 +84,7 @@ services:
       db:
         condition: service_started
     healthcheck:
-      test: ["CMD", "bash", "-c", "</dev/tcp/localhost/5000"]
+      test: ["CMD", "wget", "--no-verbose", "--spider", "http://localhost:9999/health"]
       timeout: 5s
       interval: 5s
       retries: 20
@@ -181,7 +181,7 @@ services:
     volumes:
       - ./supabase/volumes/storage:/var/lib/storage
     healthcheck:
-      test: ["CMD", "bash", "-c", "</dev/tcp/localhost/5000"]
+      test: ["CMD", "wget", "--no-verbose", "--spider", "http://localhost:5000/status"]
       timeout: 5s
       interval: 5s
       retries: 20
