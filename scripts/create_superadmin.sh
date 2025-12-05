@@ -1,22 +1,32 @@
 #!/bin/bash
 
 # Create Superadmin Script
-# Usage: ./scripts/create_superadmin.sh <email> <password>
+# Usage: ./scripts/create_superadmin.sh <email> [password]
 
 EMAIL=$1
 PASSWORD=$2
 
-if [ -z "$EMAIL" ] || [ -z "$PASSWORD" ]; then
-  echo "❌ Usage: ./scripts/create_superadmin.sh <email> <password>"
-  echo "   Example: ./scripts/create_superadmin.sh admin@example.com 'mysecurepassword123!'"
-  echo "   ⚠️  NOTE: If your password contains special characters (like &, #, !, $), wrap it in single quotes!"
+if [ -z "$EMAIL" ]; then
+  echo "❌ Usage: ./scripts/create_superadmin.sh <email> [password]"
+  echo "   Example: ./scripts/create_superadmin.sh admin@example.com"
+  echo "   (You will be prompted for the password securely if not provided)"
   exit 1
 fi
 
-# Escape single quotes for SQL ( ' becomes '' )
-# This handles passwords like "don't" becoming "don''t" which is valid SQL
-SAFE_EMAIL=${EMAIL//\'/\'\'}
-SAFE_PASSWORD=${PASSWORD//\'/\'\'}
+# Prompt for password if not provided
+if [ -z "$PASSWORD" ]; then
+    echo -n "🔑 Enter password for $EMAIL: "
+    read -s PASSWORD
+    echo ""
+    echo -n "🔑 Confirm password: "
+    read -s PASSWORD_CONFIRM
+    echo ""
+
+    if [ "$PASSWORD" != "$PASSWORD_CONFIRM" ]; then
+        echo "❌ Passwords do not match!"
+        exit 1
+    fi
+fi
 
 echo "🔧 Creating/Updating superadmin user '$EMAIL'..."
 
@@ -30,6 +40,15 @@ else
     echo "✅ pgcrypto extension verified."
 fi
 
+# Use a safe way to pass the password variable into the heredoc
+# We export it as an environment variable for the docker exec command to access? 
+# No, docker exec doesn't automatically pass host env vars unless specified.
+# Instead, we will use a cleaner heredoc approach where we escape single quotes in the password if any.
+
+# Escape single quotes in password for SQL literal
+SAFE_PASSWORD=$(echo "$PASSWORD" | sed "s/'/''/g")
+SAFE_EMAIL=$(echo "$EMAIL" | sed "s/'/''/g")
+
 # Execute the PL/pgSQL block using a Here-Document passed to stdin.
 # This avoids shell quoting issues with JSON strings.
 docker compose exec -T db psql -U postgres -d postgres <<EOF
@@ -40,7 +59,7 @@ DECLARE
     target_uid UUID;
     encrypted_pw TEXT;
 BEGIN
-    -- Generate hashed password using explicit schema
+    -- Generate hashed password using explicit schema with cost 10 (GoTrue standard)
     encrypted_pw := extensions.crypt(target_password, extensions.gen_salt('bf', 10));
     
     -- Check if user exists
