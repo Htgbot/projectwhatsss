@@ -72,22 +72,33 @@ export interface BusinessNumber {
   display_name: string;
   is_default: boolean;
   user_id: string | null;
+  company_id: string | null;
   created_at: string;
+}
+
+export interface Company {
+  id: string;
+  name: string;
+  subscription_status: 'active' | 'locked' | 'past_due';
+  created_at: string;
+  updated_at: string;
 }
 
 export interface UserProfile {
   id: string;
   email: string;
   display_name: string;
-  role: 'super_admin' | 'user';
+  role: 'superadmin' | 'admin' | 'worker';
   status: 'active' | 'inactive';
+  company_id: string | null;
   created_at: string;
   updated_at: string;
 }
 
 export interface ApiSettings {
   id: string;
-  user_id: string;
+  user_id: string | null;
+  company_id: string | null;
   ycloud_api_key: string;
   webhook_secret: string | null;
   settings: any;
@@ -98,6 +109,7 @@ export interface ApiSettings {
 export interface QuickReply {
   id: string;
   user_id: string;
+  company_id: string | null;
   shortcut: string;
   message: string | null;
   message_type: 'text' | 'image' | 'video' | 'audio' | 'document';

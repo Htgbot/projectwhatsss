@@ -1,15 +1,19 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { User } from '@supabase/supabase-js';
-import { supabase, UserProfile } from '../lib/supabase';
+import { supabase, UserProfile, Company } from '../lib/supabase';
 
 interface AuthContextType {
   user: User | null;
   profile: UserProfile | null;
+  company: Company | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, displayName: string) => Promise<void>;
   signOut: () => Promise<void>;
   isSuperAdmin: boolean;
+  isAdmin: boolean;
+  isWorker: boolean;
+  isCompanyLocked: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -17,6 +21,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [company, setCompany] = useState<Company | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -37,6 +42,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         loadProfile(session.user.id);
       } else {
         setProfile(null);
+        setCompany(null);
         setLoading(false);
       }
     });
@@ -46,14 +52,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   async function loadProfile(userId: string) {
     try {
-      const { data, error } = await supabase
+      const { data: profileData, error: profileError } = await supabase
         .from('user_profiles')
         .select('*')
         .eq('id', userId)
         .maybeSingle();
 
-      if (error) throw error;
-      setProfile(data);
+      if (profileError) throw profileError;
+      setProfile(profileData);
+
+      if (profileData?.company_id) {
+        const { data: companyData, error: companyError } = await supabase
+          .from('companies')
+          .select('*')
+          .eq('id', profileData.company_id)
+          .maybeSingle();
+        
+        if (!companyError) {
+          setCompany(companyData);
+        }
+      }
     } catch (error) {
       console.error('Error loading profile:', error);
     } finally {
@@ -83,22 +101,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   async function signOut() {
-    const { error } = await supabase.auth.signOut();
-    if (error) throw error;
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+    } catch (error) {
+      console.error('Sign out error:', error);
+      // Ensure local state is cleared even if network fails
+      setUser(null);
+      setProfile(null);
+      setCompany(null);
+    }
   }
 
-  const isSuperAdmin = profile?.role === 'super_admin';
+  const isSuperAdmin = profile?.role === 'superadmin';
+  const isAdmin = profile?.role === 'admin';
+  const isWorker = profile?.role === 'worker';
+  const isCompanyLocked = company?.subscription_status === 'locked' || company?.subscription_status === 'past_due';
 
   return (
     <AuthContext.Provider
       value={{
         user,
         profile,
+        company,
         loading,
         signIn,
         signUp,
         signOut,
         isSuperAdmin,
+        isAdmin,
+        isWorker,
+        isCompanyLocked,
       }}
     >
       {children}

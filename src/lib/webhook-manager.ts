@@ -1,3 +1,5 @@
+import { supabase } from './supabase';
+
 const WEBHOOK_MANAGER_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ycloud-webhook-manager`;
 
 export interface WebhookEndpoint {
@@ -11,12 +13,21 @@ export interface WebhookEndpoint {
   updateTime?: string;
 }
 
+async function getAuthHeaders() {
+  const { data: { session } } = await supabase.auth.getSession();
+  return {
+    'Content-Type': 'application/json',
+    'Authorization': session?.access_token ? `Bearer ${session.access_token}` : '',
+  };
+}
+
 export async function listWebhooks(apiKey: string): Promise<WebhookEndpoint[]> {
+  const authHeaders = await getAuthHeaders();
   const response = await fetch(`${WEBHOOK_MANAGER_URL}/list`, {
     method: 'GET',
     headers: {
+      ...authHeaders,
       'X-API-Key': apiKey,
-      'Content-Type': 'application/json',
     },
   });
 
@@ -34,11 +45,12 @@ export async function createWebhook(
   url: string,
   events?: string[]
 ): Promise<WebhookEndpoint> {
+  const authHeaders = await getAuthHeaders();
   const response = await fetch(`${WEBHOOK_MANAGER_URL}/create`, {
     method: 'POST',
     headers: {
+      ...authHeaders,
       'X-API-Key': apiKey,
-      'Content-Type': 'application/json',
     },
     body: JSON.stringify({
       url,
@@ -66,11 +78,12 @@ export async function updateWebhook(
   webhookId: string,
   updates: Partial<WebhookEndpoint>
 ): Promise<WebhookEndpoint> {
+  const authHeaders = await getAuthHeaders();
   const response = await fetch(`${WEBHOOK_MANAGER_URL}/update`, {
     method: 'POST',
     headers: {
+      ...authHeaders,
       'X-API-Key': apiKey,
-      'Content-Type': 'application/json',
     },
     body: JSON.stringify({
       id: webhookId,
@@ -88,11 +101,12 @@ export async function updateWebhook(
 }
 
 export async function deleteWebhook(apiKey: string, webhookId: string): Promise<void> {
+  const authHeaders = await getAuthHeaders();
   const response = await fetch(`${WEBHOOK_MANAGER_URL}/delete`, {
     method: 'POST',
     headers: {
+      ...authHeaders,
       'X-API-Key': apiKey,
-      'Content-Type': 'application/json',
     },
     body: JSON.stringify({
       id: webhookId,

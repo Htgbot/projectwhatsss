@@ -20,6 +20,11 @@
     handle_path /api/* {
         reverse_proxy kong:8000
     }
+
+    # Handle functions directly if /api prefix is missing
+    handle /functions/* {
+        reverse_proxy kong:8000
+    }
     
     # Direct access to functions if Kong doesn't handle it or for simplicity
     # But usually Kong handles /functions/v1/...

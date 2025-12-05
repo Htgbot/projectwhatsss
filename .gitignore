@@ -26,3 +26,6 @@ dist-ssr
 supabase/.branches
 supabase/.temp
 supabase/functions/**/.env
+
+supabase/volumes/
+login.json

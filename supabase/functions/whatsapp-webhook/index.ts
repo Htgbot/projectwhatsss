@@ -160,6 +160,15 @@ async function handleIncomingMessage(supabase: any, webhookData: any) {
       }
     }
 
+    // Find company_id for the business number
+    const { data: businessNumber } = await supabase
+        .from('business_numbers')
+        .select('company_id')
+        .eq('phone_number', to)
+        .maybeSingle();
+        
+    const companyId = businessNumber?.company_id;
+
     // Find or create conversation
     let { data: conversation } = await supabase
       .from('conversations')
@@ -179,6 +188,7 @@ async function handleIncomingMessage(supabase: any, webhookData: any) {
           last_message: lastMessagePreview,
           last_message_time: timestamp,
           unread_count: 1,
+          company_id: companyId, // Link conversation to company
         })
         .select()
         .single();
@@ -197,6 +207,7 @@ async function handleIncomingMessage(supabase: any, webhookData: any) {
           last_message_time: timestamp,
           unread_count: (conversation.unread_count || 0) + 1,
           updated_at: new Date().toISOString(),
+          company_id: companyId, // Ensure company_id is consistent
         })
         .eq('id', conversation.id);
 

@@ -1,3 +1,5 @@
+import { createClient } from 'npm:@supabase/supabase-js@2.57.4';
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
@@ -6,7 +8,7 @@ const corsHeaders = {
 
 const YCLOUD_API_BASE = 'https://api.ycloud.com/v2';
 
-Deno.serve(async (req: Request) => {
+export const webhookManagerHandler = async (req: Request) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, {
       status: 200,
@@ -15,6 +17,38 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    // 1. Authenticate User
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+        // Require Authentication
+        throw new Error('Missing Authorization header');
+    }
+    const token = authHeader.replace('Bearer ', '');
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+
+    if (authError || !user) {
+        throw new Error('Invalid or expired token');
+    }
+
+    // 2. Check Role (Only Admin and Superadmin)
+    const { data: userProfile, error: profileError } = await supabase
+        .from('user_profiles')
+        .select('role')
+        .eq('id', user.id)
+        .single();
+    
+    if (profileError || !userProfile) {
+        throw new Error('User profile not found');
+    }
+
+    if (userProfile.role !== 'admin' && userProfile.role !== 'superadmin') {
+        throw new Error('Permission denied. Only Admins can manage webhooks.');
+    }
+
     const url = new URL(req.url);
     const path = url.pathname;
 
@@ -66,7 +100,7 @@ Deno.serve(async (req: Request) => {
       }
     );
   }
-});
+};
 
 async function listWebhooks(apiKey: string) {
   try {
@@ -107,7 +141,7 @@ async function createWebhook(apiKey: string, config: any) {
           'whatsapp.message.updated',
           'whatsapp.smb.message.echoes',
         ],
-        description: config.description || 'WhatsApp webhook endpoint',
+        description: config.description || 'WhatsApp Business webhook',
         status: config.status || 'enabled',
       }),
     });

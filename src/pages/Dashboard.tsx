@@ -11,7 +11,7 @@ import { Conversation } from '../lib/supabase';
 type Tab = 'chats' | 'settings' | 'users';
 
 export default function Dashboard() {
-  const { signOut, isSuperAdmin, profile } = useAuth();
+  const { signOut, isSuperAdmin, isAdmin, isWorker, profile } = useAuth();
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
   const [showNewConversation, setShowNewConversation] = useState(false);
   const [activeTab, setActiveTab] = useState<Tab>('chats');
@@ -50,17 +50,19 @@ export default function Dashboard() {
           {/* Mobile Menu */}
           {showMobileMenu && !selectedConversation && (
             <div className="md:hidden bg-white border-b border-gray-200 py-2">
-              <button
-                onClick={() => {
-                  setActiveTab('settings');
-                  setShowMobileMenu(false);
-                }}
-                className="w-full px-4 py-3 text-left hover:bg-gray-100 flex items-center gap-3"
-              >
-                <SettingsIcon className="w-5 h-5 text-gray-600" />
-                <span className="text-gray-900">Settings</span>
-              </button>
-              {isSuperAdmin && (
+              {!isWorker && (
+                <button
+                  onClick={() => {
+                    setActiveTab('settings');
+                    setShowMobileMenu(false);
+                  }}
+                  className="w-full px-4 py-3 text-left hover:bg-gray-100 flex items-center gap-3"
+                >
+                  <SettingsIcon className="w-5 h-5 text-gray-600" />
+                  <span className="text-gray-900">Settings</span>
+                </button>
+              )}
+              {(isSuperAdmin || isAdmin) && (
                 <button
                   onClick={() => {
                     setActiveTab('users');
@@ -70,7 +72,9 @@ export default function Dashboard() {
                 >
                   <Users className="w-5 h-5 text-blue-600" />
                   <span className="text-gray-900">User Management</span>
-                  <span className="ml-auto px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full">Admin</span>
+                  <span className="ml-auto px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full">
+                    {isSuperAdmin ? 'Super Admin' : 'Admin'}
+                  </span>
                 </button>
               )}
               <button
@@ -103,18 +107,20 @@ export default function Dashboard() {
           ) : (
             <div className="hidden md:flex flex-1 flex-col items-center justify-center text-gray-500 relative bg-[#f0f2f5]">
               <div className="absolute top-4 right-4 flex items-center gap-3">
-                <button
-                  onClick={() => setActiveTab('settings')}
-                  className="p-2.5 hover:bg-gray-200 rounded-full transition-colors shadow-sm bg-white"
-                  title="Settings"
-                >
-                  <SettingsIcon className="w-6 h-6 text-gray-700" />
-                </button>
-                {isSuperAdmin && (
+                {!isWorker && (
+                  <button
+                    onClick={() => setActiveTab('settings')}
+                    className="p-2.5 hover:bg-gray-200 rounded-full transition-colors shadow-sm bg-white"
+                    title="Settings"
+                  >
+                    <SettingsIcon className="w-6 h-6 text-gray-700" />
+                  </button>
+                )}
+                {(isSuperAdmin || isAdmin) && (
                   <button
                     onClick={() => setActiveTab('users')}
                     className="p-2.5 bg-blue-500 hover:bg-blue-600 rounded-full transition-colors shadow-lg"
-                    title="User Management (Admin)"
+                    title="User Management"
                   >
                     <Users className="w-6 h-6 text-white" />
                   </button>
@@ -137,9 +143,15 @@ export default function Dashboard() {
                   Signed in as <span className="font-semibold text-gray-700">{profile?.display_name || 'Loading...'}</span>
                 </p>
                 {isSuperAdmin && (
+                  <div className="inline-flex items-center gap-2 px-4 py-2 bg-purple-50 border-2 border-purple-200 rounded-full">
+                    <Users className="w-4 h-4 text-purple-600" />
+                    <span className="text-sm font-semibold text-purple-700">Super Admin Access</span>
+                  </div>
+                )}
+                {isAdmin && (
                   <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 border-2 border-blue-200 rounded-full">
                     <Users className="w-4 h-4 text-blue-600" />
-                    <span className="text-sm font-semibold text-blue-700">Super Admin Access</span>
+                    <span className="text-sm font-semibold text-blue-700">Admin Access</span>
                   </div>
                 )}
               </div>
@@ -156,12 +168,12 @@ export default function Dashboard() {
       ) : activeTab === 'settings' ? (
         <Settings
           onBack={() => setActiveTab('chats')}
-          onNavigateToUsers={isSuperAdmin ? () => setActiveTab('users') : undefined}
+          onNavigateToUsers={(isSuperAdmin || isAdmin) ? () => setActiveTab('users') : undefined}
         />
       ) : (
         <UserManagement
           onBack={() => setActiveTab('chats')}
-          onNavigateToSettings={() => setActiveTab('settings')}
+          onNavigateToSettings={!isWorker ? () => setActiveTab('settings') : undefined}
         />
       )}
     </div>

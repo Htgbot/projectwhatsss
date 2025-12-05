@@ -84,7 +84,7 @@ services:
       db:
         condition: service_started
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--spider", "http://localhost:9999/health"]
+      test: ["CMD", "bash", "-c", "</dev/tcp/localhost/5000"]
       timeout: 5s
       interval: 5s
       retries: 20
@@ -129,6 +129,7 @@ services:
       db:
         condition: service_started
     restart: unless-stopped
+    # command: sh -c "env && /app/bin/server"
     environment:
       PORT: 4000
       DB_HOST: db
@@ -139,11 +140,17 @@ services:
       DB_AFTER_CONNECT_QUERY: 'SET search_path TO _realtime'
       DB_ENC_KEY: ${REALTIME_DB_ENC_KEY}
       API_JWT_SECRET: ${JWT_SECRET}
-      FLY_ALLOC_ID: fly
-      NODE_NAME: fly
+      # APP_NAME must be quoted string in some shells/parsers
+      APP_NAME: "realtime"
+      FLY_APP_NAME: "realtime"
+      TENANT_ID: stub
       ERL_AFLAGS: -proto_dist inet_tcp
+      SECRET_KEY_BASE: ${SECRET_KEY_BASE:-your-super-secret-and-long-random-key-base-string-at-least-64-bytes}
+      # Secure channels configuration
+      ENABLE_TAILSCALE: "false"
+      DNS_NODES: "127.0.0.1"
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--spider", "http://localhost:4000/health"]
+      test: ["CMD", "bash", "-c", "</dev/tcp/localhost/4000"]
       timeout: 5s
       interval: 5s
       retries: 20
@@ -164,16 +171,17 @@ services:
       SERVICE_KEY: ${SERVICE_ROLE_KEY}
       POSTGREST_URL: http://rest:3000
       PGRST_JWT_SECRET: ${JWT_SECRET}
-      DATABASE_URL: postgres://supabase_storage_admin:${POSTGRES_PASSWORD}@db:5432/postgres
+      DATABASE_URL: postgres://postgres:${POSTGRES_PASSWORD}@db:5432/postgres
       FILE_SIZE_LIMIT: 52428800
       STORAGE_BACKEND: file
+      FILE_STORAGE_BACKEND_PATH: /var/lib/storage
       TENANT_ID: stub
       REGION: stub
       GLOBAL_S3_BUCKET: stub
     volumes:
       - ./supabase/volumes/storage:/var/lib/storage
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--spider", "http://localhost:5000/status"]
+      test: ["CMD", "bash", "-c", "</dev/tcp/localhost/5000"]
       timeout: 5s
       interval: 5s
       retries: 20
@@ -192,7 +200,7 @@ services:
       PG_META_DB_HOST: db
       PG_META_DB_PASSWORD: ${POSTGRES_PASSWORD}
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--spider", "http://localhost:8080/health"]
+      test: ["CMD", "bash", "-c", "</dev/tcp/localhost/8080"]
       timeout: 5s
       interval: 5s
       retries: 20
@@ -203,6 +211,10 @@ services:
     container_name: supabase-edge-functions
     image: supabase/edge-runtime:v1.69.25
     restart: unless-stopped
+    # working_dir: /home/deno/functions
+    # The entrypoint is 'edge-runtime', so we just provide the arguments
+    command: start --main-service /home/deno/functions --port 8081 --ip 0.0.0.0
+    # entrypoint: ["/bin/sh", "-c", "ls -R /home/deno"]
     ports:
       - "8081:8081"
     environment:
@@ -214,7 +226,7 @@ services:
     volumes:
       - ./supabase/functions:/home/deno/functions
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--spider", "http://localhost:8081/status"]
+      test: ["CMD", "bash", "-c", "</dev/tcp/localhost/8081"]
       timeout: 5s
       interval: 5s
       retries: 10

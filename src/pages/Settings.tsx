@@ -1,8 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
-import { ArrowLeft, Plus, Trash2, Save, Users, Bell, MessageSquare, Edit2, Upload, X, Image as ImageIcon, Video, FileText } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, Save, Users, Bell, MessageSquare, Edit2, Upload, X, Image as ImageIcon, Video, FileText, Shield } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase, BusinessNumber, ApiSettings, QuickReply } from '../lib/supabase';
-import { listWebhooks, createWebhook, deleteWebhook, WebhookEndpoint } from '../lib/webhook-manager';
 import { requestNotificationPermission } from '../lib/notifications';
 
 interface SettingsProps {
@@ -11,9 +10,8 @@ interface SettingsProps {
 }
 
 export default function Settings({ onBack, onNavigateToUsers }: SettingsProps) {
-  const { user, isSuperAdmin } = useAuth();
+  const { user, isSuperAdmin, isAdmin, isWorker, company } = useAuth();
   const [apiKey, setApiKey] = useState('');
-  const [webhookSecret, setWebhookSecret] = useState('');
   const [numbers, setNumbers] = useState<BusinessNumber[]>([]);
   const [newNumber, setNewNumber] = useState('');
   const [newNumberName, setNewNumberName] = useState('');
@@ -33,36 +31,32 @@ export default function Settings({ onBack, onNavigateToUsers }: SettingsProps) {
   const [mediaPreview, setMediaPreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
-  // Webhook state
-  const [webhooks, setWebhooks] = useState<WebhookEndpoint[]>([]);
-  const [loadingWebhooks, setLoadingWebhooks] = useState(false);
-  const [webhookUrl, setWebhookUrl] = useState('');
+  // Computed webhook URL based on current location
+  // Ensure /api prefix is included for correct routing through Nginx/Kong
+  const webhookUrl = `${window.location.origin}/api/functions/v1/whatsapp-webhook`;
 
   useEffect(() => {
     loadSettings();
     loadNumbers();
     loadQuickReplies();
-  }, []);
-
-  useEffect(() => {
-    if (apiKey) {
-      loadWebhooks();
-    }
-  }, [apiKey]);
+  }, [user, company]);
 
   async function loadSettings() {
+    if (!company) {
+      setLoading(false);
+      return;
+    }
     try {
       const { data, error } = await supabase
         .from('api_settings')
         .select('*')
-        .eq('user_id', user!.id)
+        .eq('company_id', company.id)
         .maybeSingle();
 
       if (error && error.code !== 'PGRST116') throw error;
 
       if (data) {
         setApiKey(data.ycloud_api_key);
-        setWebhookSecret(data.webhook_secret || '');
       }
     } catch (error) {
       console.error('Error loading settings:', error);
@@ -72,11 +66,12 @@ export default function Settings({ onBack, onNavigateToUsers }: SettingsProps) {
   }
 
   async function loadNumbers() {
+    if (!company) return;
     try {
       const { data, error } = await supabase
         .from('business_numbers')
         .select('*')
-        .eq('user_id', user!.id)
+        .eq('company_id', company.id)
         .order('created_at');
 
       if (error) throw error;
@@ -86,11 +81,9 @@ export default function Settings({ onBack, onNavigateToUsers }: SettingsProps) {
     }
   }
 
-  async function handleSaveSettings() {
-    if (!apiKey.trim()) {
-      alert('Please enter your YCloud API key');
-      return;
-    }
+  async function handleSaveSettings(e: React.FormEvent) {
+    e.preventDefault();
+    if (!company) return;
 
     setSaving(true);
     try {
@@ -98,17 +91,27 @@ export default function Settings({ onBack, onNavigateToUsers }: SettingsProps) {
         .from('api_settings')
         .upsert({
           user_id: user!.id,
-          ycloud_api_key: apiKey.trim(),
-          webhook_secret: webhookSecret.trim() || null,
+          company_id: company.id,
+          ycloud_api_key: apiKey,
           updated_at: new Date().toISOString(),
-        });
+        }, { onConflict: 'company_id' });
 
       if (error) throw error;
-      alert('Settings saved successfully!');
+      alert('Settings saved successfully');
     } catch (error: any) {
       alert(error.message || 'Failed to save settings');
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function copyWebhookUrl() {
+    try {
+      await navigator.clipboard.writeText(webhookUrl);
+      alert('Webhook URL copied to clipboard!');
+    } catch (err) {
+      console.error('Failed to copy:', err);
+      alert('Failed to copy URL. Please copy it manually.');
     }
   }
 
@@ -118,11 +121,17 @@ export default function Settings({ onBack, onNavigateToUsers }: SettingsProps) {
       return;
     }
 
+    if (!company) {
+      alert('No company associated with this account');
+      return;
+    }
+
     try {
       const { error } = await supabase.from('business_numbers').insert({
         phone_number: newNumber.trim(),
         display_name: newNumberName.trim(),
         user_id: user!.id,
+        company_id: company.id,
         is_default: numbers.length === 0,
       });
 
@@ -153,78 +162,18 @@ export default function Settings({ onBack, onNavigateToUsers }: SettingsProps) {
   }
 
   async function loadQuickReplies() {
+    if (!company) return;
     try {
       const { data, error } = await supabase
         .from('quick_replies')
         .select('*')
-        .eq('user_id', user!.id)
+        .eq('company_id', company.id)
         .order('shortcut');
 
       if (error) throw error;
       setQuickReplies(data || []);
     } catch (error) {
       console.error('Error loading quick replies:', error);
-    }
-  }
-
-  async function loadWebhooks() {
-    if (!apiKey) return;
-    
-    setLoadingWebhooks(true);
-    try {
-      const data = await listWebhooks(apiKey);
-      setWebhooks(data);
-    } catch (error) {
-      console.error('Error loading webhooks:', error);
-      // Don't alert here to avoid annoyance on initial load if key is invalid
-    } finally {
-      setLoadingWebhooks(false);
-    }
-  }
-
-  async function handleRegisterWebhook() {
-    if (!apiKey) {
-      alert('Please save your YCloud API Key first');
-      return;
-    }
-    if (!webhookUrl) {
-      alert('Please enter a webhook URL');
-      return;
-    }
-
-    // Append path if not present
-    let finalUrl = webhookUrl;
-    if (!finalUrl.includes('/functions/v1/whatsapp-webhook')) {
-        // Check if it ends with slash
-        if (finalUrl.endsWith('/')) {
-            finalUrl += 'functions/v1/whatsapp-webhook';
-        } else {
-            finalUrl += '/functions/v1/whatsapp-webhook';
-        }
-    }
-
-    if (!confirm(`Register webhook URL: ${finalUrl}?`)) return;
-
-    try {
-      await createWebhook(apiKey, finalUrl);
-      alert('Webhook registered successfully!');
-      setWebhookUrl('');
-      loadWebhooks();
-    } catch (error: any) {
-      console.error('Error registering webhook:', error);
-      alert(error.message || 'Failed to register webhook');
-    }
-  }
-
-  async function handleDeleteWebhook(id: string) {
-    if (!confirm('Are you sure you want to delete this webhook?')) return;
-
-    try {
-      await deleteWebhook(apiKey, id);
-      loadWebhooks();
-    } catch (error: any) {
-      console.error('Error deleting webhook:', error);
-      alert(error.message || 'Failed to delete webhook');
     }
   }
 
@@ -300,11 +249,17 @@ export default function Settings({ onBack, onNavigateToUsers }: SettingsProps) {
       return;
     }
 
+    if (!company) {
+      alert('No company associated with this account');
+      return;
+    }
+
     try {
       const { error } = await supabase
         .from('quick_replies')
         .insert({
           user_id: user!.id,
+          company_id: company.id,
           shortcut: newQuickReply.shortcut.trim().toLowerCase(),
           message: newQuickReply.message_type === 'text' ? newQuickReply.message.trim() : null,
           message_type: newQuickReply.message_type,
@@ -372,6 +327,33 @@ export default function Settings({ onBack, onNavigateToUsers }: SettingsProps) {
     );
   }
 
+  if (isWorker) {
+    return (
+      <div className="flex-1 flex flex-col bg-white w-full">
+        <div className="bg-[#008069] md:bg-[#f0f2f5] border-b border-gray-200 px-3 md:px-4 py-3 md:py-4 flex items-center justify-between">
+          <div className="flex items-center gap-3 md:gap-4">
+            <button
+              onClick={onBack}
+              className="p-2 hover:bg-[#017561] md:hover:bg-gray-200 rounded-full transition-colors"
+            >
+              <ArrowLeft className="w-5 h-5 text-white md:text-gray-700" />
+            </button>
+            <h1 className="text-lg md:text-xl font-semibold text-white md:text-gray-900">Settings</h1>
+          </div>
+        </div>
+        <div className="flex-1 flex items-center justify-center p-6">
+          <div className="text-center max-w-md">
+            <Shield className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+            <h2 className="text-xl font-semibold text-gray-900 mb-2">Access Restricted</h2>
+            <p className="text-gray-600">
+              Worker accounts do not have permission to modify settings. Please contact your administrator.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex-1 flex flex-col bg-white w-full">
       <div className="bg-[#008069] md:bg-[#f0f2f5] border-b border-gray-200 px-3 md:px-4 py-3 md:py-4 flex items-center justify-between">
@@ -384,7 +366,7 @@ export default function Settings({ onBack, onNavigateToUsers }: SettingsProps) {
           </button>
           <h1 className="text-lg md:text-xl font-semibold text-white md:text-gray-900">Settings</h1>
         </div>
-        {isSuperAdmin && onNavigateToUsers && (
+        {(isSuperAdmin || isAdmin) && onNavigateToUsers && (
           <button
             onClick={onNavigateToUsers}
             className="hidden md:flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
@@ -393,7 +375,7 @@ export default function Settings({ onBack, onNavigateToUsers }: SettingsProps) {
             User Management
           </button>
         )}
-        {isSuperAdmin && onNavigateToUsers && (
+        {(isSuperAdmin || isAdmin) && onNavigateToUsers && (
           <button
             onClick={onNavigateToUsers}
             className="md:hidden p-2 hover:bg-[#017561] rounded-full transition-colors"
@@ -408,7 +390,7 @@ export default function Settings({ onBack, onNavigateToUsers }: SettingsProps) {
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 md:p-6">
             <h2 className="text-lg font-semibold text-gray-900 mb-4">YCloud API Configuration</h2>
 
-            <div className="space-y-4">
+            <form onSubmit={handleSaveSettings} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   API Key *
@@ -419,6 +401,7 @@ export default function Settings({ onBack, onNavigateToUsers }: SettingsProps) {
                   onChange={(e) => setApiKey(e.target.value)}
                   placeholder="Enter your YCloud API key"
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                  required
                 />
                 <p className="text-xs text-gray-500 mt-1">
                   Get your API key from{' '}
@@ -433,94 +416,44 @@ export default function Settings({ onBack, onNavigateToUsers }: SettingsProps) {
                 </p>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Webhook Secret (Optional)
-                </label>
-                <input
-                  type="text"
-                  value={webhookSecret}
-                  onChange={(e) => setWebhookSecret(e.target.value)}
-                  placeholder="Enter webhook secret for verification"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                />
-              </div>
-
               <button
-                onClick={handleSaveSettings}
+                type="submit"
                 disabled={saving}
                 className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50"
               >
                 <Save className="w-4 h-4" />
                 {saving ? 'Saving...' : 'Save Settings'}
               </button>
-            </div>
+            </form>
           </div>
 
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 md:p-6">
-            <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold text-gray-900">YCloud Webhook Configuration</h2>
-                <button onClick={loadWebhooks} className="text-sm text-blue-600 hover:underline">Refresh</button>
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">YCloud Webhook Configuration</h2>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Webhook Listener URL
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={webhookUrl}
+                    readOnly
+                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-600"
+                  />
+                  <button
+                    onClick={copyWebhookUrl}
+                    className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 border border-gray-300 transition-colors"
+                  >
+                    Copy
+                  </button>
+                </div>
+                <p className="text-xs text-gray-500 mt-2">
+                  Copy this URL and paste it into your YCloud Dashboard under Webhook settings.
+                </p>
+              </div>
             </div>
-
-            {loadingWebhooks ? (
-                <div className="text-center py-4">
-                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-green-600 mx-auto"></div>
-                </div>
-            ) : (
-                <div className="space-y-6">
-                    {/* Existing Webhooks */}
-                    <div className="space-y-3">
-                        {webhooks.length > 0 ? (
-                            webhooks.map((hook) => (
-                                <div key={hook.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
-                                    <div className="overflow-hidden">
-                                        <p className="font-medium text-gray-900 truncate" title={hook.url}>{hook.url}</p>
-                                        <div className="flex items-center gap-2 mt-1">
-                                            <span className={`text-xs px-2 py-0.5 rounded-full ${hook.status === 'active' || hook.status === 'enabled' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'}`}>
-                                                {hook.status}
-                                            </span>
-                                            <span className="text-xs text-gray-500">{hook.enabledEvents?.length || 0} events</span>
-                                        </div>
-                                    </div>
-                                    <button
-                                        onClick={() => handleDeleteWebhook(hook.id)}
-                                        className="p-2 text-red-600 hover:bg-red-50 rounded-full transition-colors flex-shrink-0"
-                                        title="Delete Webhook"
-                                    >
-                                        <Trash2 className="w-4 h-4" />
-                                    </button>
-                                </div>
-                            ))
-                        ) : (
-                            <p className="text-sm text-gray-500 italic">No webhooks registered via API.</p>
-                        )}
-                    </div>
-
-                    {/* Add New Webhook */}
-                    <div className="border-t border-gray-200 pt-4">
-                        <h3 className="text-sm font-medium text-gray-700 mb-3">Register New Webhook</h3>
-                        <div className="flex gap-2">
-                            <input
-                                type="text"
-                                value={webhookUrl}
-                                onChange={(e) => setWebhookUrl(e.target.value)}
-                                placeholder="https://your-domain.com"
-                                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                            />
-                            <button
-                                onClick={handleRegisterWebhook}
-                                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors whitespace-nowrap"
-                            >
-                                Register
-                            </button>
-                        </div>
-                        <p className="text-xs text-gray-500 mt-2">
-                            Enter your public URL. We will append <code>/functions/v1/whatsapp-webhook</code> automatically.
-                        </p>
-                    </div>
-                </div>
-            )}
           </div>
 
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 md:p-6">

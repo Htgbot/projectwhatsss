@@ -15,7 +15,7 @@ interface SendMessageRequest {
   data: any;
 }
 
-Deno.serve(async (req: Request) => {
+export const whatsappApiHandler = async (req: Request) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, {
       status: 200,
@@ -28,16 +28,50 @@ Deno.serve(async (req: Request) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
+    // 1. Authenticate User
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      throw new Error('Missing Authorization header');
+    }
+    const token = authHeader.replace('Bearer ', '');
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+
+    if (authError || !user) {
+      throw new Error('Invalid or expired token');
+    }
+
+    // 2. Get User Profile and Company Status
+    const { data: userProfile, error: profileError } = await supabase
+      .from('user_profiles')
+      .select('role, company_id, companies(subscription_status)')
+      .eq('id', user.id)
+      .single();
+
+    if (profileError || !userProfile) {
+      throw new Error('User profile not found');
+    }
+
+    const isSuperAdmin = userProfile.role === 'superadmin';
+    // Optional chaining is safe here because companies might be null if user has no company
+    // But enforced by business logic usually.
+    const subscriptionStatus = userProfile.companies?.subscription_status;
+    const isLocked = subscriptionStatus === 'locked' || subscriptionStatus === 'past_due';
+
+    // 3. Check Subscription Status (Block if locked, unless Superadmin)
+    if (isLocked && !isSuperAdmin) {
+      throw new Error('Company subscription is locked. Cannot send messages.');
+    }
+
     const { action, from, to, data }: SendMessageRequest = await req.json();
 
     if (!from) {
       throw new Error('from_number is required');
     }
 
-    // Get the user_id who owns this business number
+    // 4. Verify Business Number Ownership
     const { data: businessNumber, error: numberError } = await supabase
       .from('business_numbers')
-      .select('user_id')
+      .select('user_id, company_id')
       .eq('phone_number', from)
       .maybeSingle();
 
@@ -45,15 +79,33 @@ Deno.serve(async (req: Request) => {
       throw new Error('Business number not found');
     }
 
-    // Get the API key for this user
-    const { data: apiSettings, error: apiError } = await supabase
-      .from('api_settings')
-      .select('ycloud_api_key')
-      .eq('user_id', businessNumber.user_id)
-      .maybeSingle();
+    // Check permissions
+    // If user is not superadmin, they must belong to the same company as the business number
+    if (!isSuperAdmin) {
+      if (!userProfile.company_id || userProfile.company_id !== businessNumber.company_id) {
+        throw new Error('You do not have permission to use this business number');
+      }
+    }
 
-    if (apiError || !apiSettings) {
-      throw new Error('API key not configured for this number');
+    // 5. Get the API key for this company
+    // Prefer company_id lookup
+    let apiKeyQuery = supabase
+      .from('api_settings')
+      .select('ycloud_api_key');
+    
+    if (businessNumber.company_id) {
+        apiKeyQuery = apiKeyQuery.eq('company_id', businessNumber.company_id);
+    } else if (businessNumber.user_id) {
+        // Fallback for legacy data
+        apiKeyQuery = apiKeyQuery.eq('user_id', businessNumber.user_id);
+    } else {
+        throw new Error('Business number is not linked to any company or user');
+    }
+
+    const { data: apiSettings, error: apiError } = await apiKeyQuery.maybeSingle();
+
+    if (apiError || !apiSettings || !apiSettings.ycloud_api_key) {
+      throw new Error('API key not configured for this company');
     }
 
     const YCLOUD_API_KEY = apiSettings.ycloud_api_key;
@@ -210,6 +262,7 @@ Deno.serve(async (req: Request) => {
             contact_name: to,
             last_message: data.text || 'Media message',
             last_message_time: new Date().toISOString(),
+            company_id: businessNumber.company_id, // Ensure conversation is linked to company
           })
           .select()
           .single();
@@ -235,6 +288,7 @@ Deno.serve(async (req: Request) => {
             last_message: lastMessage,
             last_message_time: new Date().toISOString(),
             updated_at: new Date().toISOString(),
+            company_id: businessNumber.company_id, // Ensure company_id is set/updated
           })
           .eq('id', conv.id);
         conversation = conv;
@@ -282,6 +336,7 @@ Deno.serve(async (req: Request) => {
         content: contentToStore,
         status: 'sent',
         timestamp: new Date().toISOString(),
+        company_id: businessNumber.company_id, // Ensure message is linked to company
       })
       .select()
       .single();
@@ -316,4 +371,4 @@ Deno.serve(async (req: Request) => {
       }
     );
   }
-});
+};

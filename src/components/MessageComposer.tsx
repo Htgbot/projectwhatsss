@@ -26,7 +26,7 @@ interface MessageComposerProps {
 }
 
 export default function MessageComposer({ conversation, replyingTo, onCancelReply, messages = [], onOptimisticMessage }: MessageComposerProps) {
-  const { user } = useAuth();
+  const { user, isCompanyLocked } = useAuth();
   const [message, setMessage] = useState('');
   const [sending, setSending] = useState(false);
   const [showAttachMenu, setShowAttachMenu] = useState(false);
@@ -374,7 +374,7 @@ export default function MessageComposer({ conversation, replyingTo, onCancelRepl
     return Math.max(0, hoursRemaining);
   }
 
-  const canSendMessage = messages.length === 0 || isMessageWindowOpen();
+  const canSendMessage = !isCompanyLocked && (messages.length === 0 || isMessageWindowOpen());
 
   return (
     <>
@@ -387,7 +387,18 @@ export default function MessageComposer({ conversation, replyingTo, onCancelRepl
       />
 
       <div className="bg-white md:bg-[#f0f2f5] border-t border-gray-200 md:border-gray-200 px-4 py-3 sticky bottom-0 z-10">
-        {!canSendMessage && (
+        {isCompanyLocked && (
+          <div className="mb-3 px-4 py-3 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <p className="text-sm font-semibold text-red-900 mb-1">Subscription Locked</p>
+              <p className="text-xs text-red-700">
+                Your company account is locked due to subscription status. Please contact your Super Admin or renew your subscription to send messages.
+              </p>
+            </div>
+          </div>
+        )}
+        {!isCompanyLocked && !canSendMessage && (
           <div className="mb-3 px-4 py-3 bg-amber-50 border border-amber-200 rounded-lg flex items-start gap-3">
             <Lock className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
             <div className="flex-1">
