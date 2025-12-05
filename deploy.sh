@@ -31,8 +31,8 @@ echo "⏳ Waiting for database to be ready..."
 sleep 10
 
 # Fix missing auth.factor_type if needed (prevents supabase-auth crash)
-echo "🛠️ Ensuring auth.factor_type exists..."
-docker compose exec -T db psql -U postgres -d postgres -c "DO \$\$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'factor_type') THEN CREATE TYPE auth.factor_type AS ENUM ('totp', 'webauthn', 'phone'); END IF; END \$\$;" || echo "⚠️ Warning: Could not create factor_type (might already exist or DB not ready)"
+echo "🛠️ Ensuring auth.factor_type exists and has correct owner..."
+docker compose exec -T db psql -U postgres -d postgres -c "DO \$\$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'factor_type') THEN CREATE TYPE auth.factor_type AS ENUM ('totp', 'webauthn', 'phone'); END IF; END \$\$; ALTER TYPE auth.factor_type OWNER TO supabase_auth_admin;" || echo "⚠️ Warning: Could not create/fix factor_type"
 
 # 3. Rebuild and restart containers
 echo "🔄 Rebuilding and restarting Docker containers..."
