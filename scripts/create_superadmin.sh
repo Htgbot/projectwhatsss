@@ -8,7 +8,8 @@ PASSWORD=$2
 
 if [ -z "$EMAIL" ] || [ -z "$PASSWORD" ]; then
   echo "❌ Usage: ./scripts/create_superadmin.sh <email> <password>"
-  echo "   Example: ./scripts/create_superadmin.sh admin@example.com mysecurepassword123"
+  echo "   Example: ./scripts/create_superadmin.sh admin@example.com 'mysecurepassword123!'"
+  echo "   ⚠️  NOTE: If your password contains special characters (like &, #, !, $), wrap it in single quotes!"
   exit 1
 fi
 
