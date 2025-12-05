@@ -6,7 +6,6 @@ export default function TempSuper() {
   const { signUp } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [displayName, setDisplayName] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -18,7 +17,8 @@ export default function TempSuper() {
     setLoading(true);
 
     try {
-      await signUp(email, password, displayName);
+      // Use email as display name since we removed the field
+      await signUp(email, password, email);
       setSuccess('Account created successfully! Please run "./scripts/set_superadmin.sh ' + email + '" on your VPS to make this user a Super Admin.');
     } catch (err: any) {
       setError(err.message || 'Failed to create account');
@@ -53,21 +53,6 @@ export default function TempSuper() {
 
           {!success && (
             <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label htmlFor="displayName" className="block text-sm font-medium text-gray-700 mb-1">
-                  Full Name
-                </label>
-                <input
-                  id="displayName"
-                  type="text"
-                  value={displayName}
-                  onChange={(e) => setDisplayName(e.target.value)}
-                  required
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="John Doe"
-                />
-              </div>
-
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
                   Email Address
