@@ -15,8 +15,15 @@ fi
 
 echo "🔧 Creating/Updating superadmin user '$EMAIL'..."
 
-# Ensure pgcrypto is available
-docker compose exec -T db psql -U postgres -d postgres -c "CREATE EXTENSION IF NOT EXISTS \"pgcrypto\" WITH SCHEMA extensions;"
+# Check if pgcrypto exists to avoid permission errors on re-creation attempts
+EXTENSION_EXISTS=$(docker compose exec -T db psql -U postgres -d postgres -tAc "SELECT 1 FROM pg_extension WHERE extname = 'pgcrypto'")
+
+if [ "$EXTENSION_EXISTS" != "1" ]; then
+    echo "⚠️ pgcrypto extension not found. Attempting to create..."
+    docker compose exec -T db psql -U postgres -d postgres -c "CREATE EXTENSION IF NOT EXISTS \"pgcrypto\" WITH SCHEMA extensions;"
+else
+    echo "✅ pgcrypto extension verified."
+fi
 
 docker compose exec -T db psql -U postgres -d postgres -c "
 DO \$\$
@@ -26,8 +33,8 @@ DECLARE
     target_uid UUID;
     encrypted_pw TEXT;
 BEGIN
-    -- Generate hashed password
-    encrypted_pw := crypt(target_password, gen_salt('bf'));
+    -- Generate hashed password using explicit schema
+    encrypted_pw := extensions.crypt(target_password, extensions.gen_salt('bf'));
     
     -- Check if user exists
     SELECT id INTO target_uid FROM auth.users WHERE email = target_email;
