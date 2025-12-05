@@ -3,7 +3,8 @@
 -- It is idempotent and can be run multiple times.
 
 -- 1. Extensions
-CREATE EXTENSION IF NOT EXISTS "pgcrypto" WITH SCHEMA extensions;
+-- Commented out to avoid permission errors on some VPS setups where extension is already installed
+-- CREATE EXTENSION IF NOT EXISTS "pgcrypto" WITH SCHEMA extensions;
 
 -- 2. Core Tables (Companies, User Profiles, API Settings)
 CREATE TABLE IF NOT EXISTS public.companies (
@@ -195,30 +196,47 @@ END $$;
 -- Companies
 CREATE POLICY "Superadmin all companies" ON public.companies
     FOR ALL USING (
-        EXISTS (SELECT 1 FROM public.user_profiles WHERE id = auth.uid() AND role = 'superadmin')
+        get_my_role() = 'superadmin'
     );
 
 CREATE POLICY "Admin view own company" ON public.companies
     FOR SELECT USING (
-        id IN (SELECT company_id FROM public.user_profiles WHERE id = auth.uid())
+        id = get_my_company_id()
     );
 
 -- User Profiles
-CREATE POLICY "Superadmin all profiles" ON public.user_profiles
-    FOR ALL USING (
-        EXISTS (SELECT 1 FROM public.user_profiles WHERE id = auth.uid() AND role = 'superadmin')
-    );
+-- Fix infinite recursion: Do not query user_profiles inside the policy for user_profiles
+-- Instead, use auth.jwt() -> user_metadata if possible, or break the chain.
+-- For "Superadmin all profiles", we can't easily break it without a separate lookup table or trusting metadata.
+-- A common pattern to avoid recursion is to use a SECURITY DEFINER function or separate admin table.
+-- However, for now, let's simplify the Superadmin check to avoid self-select if possible, 
+-- OR rely on the fact that "Self view" is safe.
+-- The recursion happens because checking "Am I a superadmin?" queries the table we are trying to view.
 
-CREATE POLICY "Admin view company profiles" ON public.user_profiles
-    FOR SELECT USING (
-        company_id IN (SELECT company_id FROM public.user_profiles WHERE id = auth.uid())
-    );
-
+-- SAFE POLICIES (Non-recursive)
 CREATE POLICY "Self view profile" ON public.user_profiles
     FOR SELECT USING (id = auth.uid());
 
 CREATE POLICY "Self update profile" ON public.user_profiles
     FOR UPDATE USING (id = auth.uid());
+
+-- RECURSIVE-PRONE POLICIES (Fixed)
+-- We use a trick: direct ID comparison avoids the recursion for the row itself,
+-- but for viewing OTHERS, we need to know our role.
+-- To fix this properly, we should use a JWT claim for role, BUT since we use database roles:
+-- We will create a secure function to check role that BYPASSES RLS.
+
+CREATE POLICY "Superadmin all profiles" ON public.user_profiles
+    FOR ALL USING (
+        -- Use the secure function that bypasses RLS to check role
+        get_my_role() = 'superadmin'
+    );
+
+CREATE POLICY "Admin view company profiles" ON public.user_profiles
+    FOR SELECT USING (
+        -- Use secure functions to get my details without triggering RLS on the table again
+        company_id = get_my_company_id()
+    );
 
 -- Conversations (Isolated by Company)
 CREATE POLICY "Users can view company conversations"
