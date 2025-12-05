@@ -47,7 +47,30 @@ BEGIN
             updated_at = NOW()
         WHERE id = target_uid;
         
-        RAISE NOTICE '✅ User % exists. Password updated.', target_email;
+        -- Ensure identity exists (fixes cases where previous insert failed)
+        INSERT INTO auth.identities (
+            id,
+            user_id,
+            identity_data,
+            provider,
+            provider_id,
+            last_sign_in_at,
+            created_at,
+            updated_at
+        )
+        VALUES (
+            target_uid,
+            target_uid,
+            format('{"sub": "%s", "email": "%s"}', target_uid, target_email)::jsonb,
+            'email',
+            target_uid::text,
+            NOW(),
+            NOW(),
+            NOW()
+        )
+        ON CONFLICT DO NOTHING;
+        
+        RAISE NOTICE '✅ User % exists. Password updated (and identity verified).', target_email;
     ELSE
         -- Create new user
         target_uid := gen_random_uuid();
@@ -89,6 +112,7 @@ BEGIN
             user_id,
             identity_data,
             provider,
+            provider_id,
             last_sign_in_at,
             created_at,
             updated_at
@@ -96,8 +120,9 @@ BEGIN
         VALUES (
             target_uid,
             target_uid,
-            format('{\"sub\": \"%s\", \"email\": \"%s\"}', target_uid, target_email)::jsonb,
+            format('{"sub": "%s", "email": "%s"}', target_uid, target_email)::jsonb,
             'email',
+            target_uid::text,
             NOW(),
             NOW(),
             NOW()
