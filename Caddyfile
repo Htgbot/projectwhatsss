@@ -27,6 +27,10 @@
             # WebSocket support
             header_up Upgrade {http.request.header.Upgrade}
             header_up Connection {http.request.header.Connection}
+            header_up Sec-WebSocket-Key {http.request.header.Sec-WebSocket-Key}
+            header_up Sec-WebSocket-Version {http.request.header.Sec-WebSocket-Version}
+            header_up Sec-WebSocket-Extensions {http.request.header.Sec-WebSocket-Extensions}
+            header_up Sec-WebSocket-Protocol {http.request.header.Sec-WebSocket-Protocol}
         }
     }
 
