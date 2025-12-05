@@ -26,8 +26,9 @@ fi
 echo "🧹 Cleaning up unused Docker images..."
 docker image prune -f
 
-# 5. Run Diagnostics (Optional)
+# 5. Run Diagnostics
 if [ -f "./check_vps.sh" ]; then
+    echo "🔍 Running post-deployment diagnostics..."
     chmod +x ./check_vps.sh
     ./check_vps.sh
 fi
