@@ -1,15 +1,13 @@
-const fs = require('fs');
-const path = require('path');
+#!/bin/bash
+# Run this on your VPS to fix the Superadmin login instantly
 
-const backupPath = path.join(__dirname, '..', 'supabase_full_backup.sql');
-const outputPath = path.join(__dirname, '..', 'init_db.sql');
+echo "Fixing Superadmin Login..."
 
-const superAdminSQL = `
---
--- Data for Name: auth.users; Type: TABLE DATA; Schema: auth; Owner: supabase_auth_admin
---
+# Ensure pgcrypto exists
+docker compose exec -T db psql -U postgres -d postgres -c "CREATE EXTENSION IF NOT EXISTS \"pgcrypto\" SCHEMA extensions;"
 
-DO $$
+docker compose exec -T db psql -U postgres -d postgres -c "
+DO \$\$
 DECLARE
   user_id uuid;
   encrypted_pw text;
@@ -28,8 +26,8 @@ BEGIN
     SET encrypted_password = encrypted_pw,
         email_confirmed_at = now(),
         updated_at = now(),
-        raw_app_meta_data = '{"provider": "email", "providers": ["email"]}',
-        raw_user_meta_data = '{"display_name": "Super Admin"}',
+        raw_app_meta_data = '{\"provider\": \"email\", \"providers\": [\"email\"]}',
+        raw_user_meta_data = '{\"display_name\": \"Super Admin\"}',
         is_super_admin = true,
         role = 'authenticated'
     WHERE id = user_id;
@@ -45,15 +43,14 @@ BEGIN
     ) VALUES (
       '00000000-0000-0000-0000-000000000000', user_id, 'authenticated', 'authenticated', email_val, encrypted_pw, 
       now(), now(), now(), 
-      '{"provider": "email", "providers": ["email"]}', '{"display_name": "Super Admin"}', 
+      '{\"provider\": \"email\", \"providers\": [\"email\"]}', '{\"display_name\": \"Super Admin\"}', 
       now(), now(), '', '', '', '', true
     );
     
-    -- Insert Identity
     INSERT INTO auth.identities (
       id, user_id, identity_data, provider, last_sign_in_at, created_at, updated_at
     ) VALUES (
-      user_id, user_id, format('{"sub": "%s", "email": "%s"}', user_id, email_val)::jsonb, 'email', now(), now(), now()
+      user_id, user_id, format('{\"sub\": \"%s\", \"email\": \"%s\"}', user_id, email_val)::jsonb, 'email', now(), now(), now()
     );
   END IF;
 
@@ -62,27 +59,7 @@ BEGIN
   VALUES (user_id, email_val, 'superadmin', 'active')
   ON CONFLICT (id) DO UPDATE SET role = 'superadmin', status = 'active';
 
-  RAISE NOTICE 'Superadmin created/updated successfully';
+  RAISE NOTICE 'DONE. Password reset to: 7j&EUScVCt1v#';
 END
-$$;
-`;
-
-try {
-  let content = fs.readFileSync(backupPath, 'utf8');
-
-  // Remove COPY blocks (Data)
-  // Pattern: COPY ... FROM stdin; ... \.
-  // We use a non-greedy match across multiple lines
-  content = content.replace(/^COPY[\s\S]*?^\\\.\s*$/gm, '');
-
-  // Remove specific INSERTs if any (though COPY is standard for dumps)
-  
-  // Append the Superadmin creation
-  const finalContent = content + '\n\n' + superAdminSQL;
-
-  fs.writeFileSync(outputPath, finalContent);
-  console.log('Successfully created init_db.sql with clean schema and superadmin user.');
-} catch (err) {
-  console.error('Error processing backup file:', err);
-  process.exit(1);
-}
+\$\$;
+"
