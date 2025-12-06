@@ -22,6 +22,12 @@ CREATE SCHEMA IF NOT EXISTS extensions;
 GRANT USAGE ON SCHEMA extensions TO supabase_auth_admin, postgres, authenticated, anon, service_role;
 GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA extensions TO supabase_auth_admin, postgres, authenticated, anon, service_role;
 
+-- Grant usage on public schema (Crucial for triggers)
+GRANT USAGE ON SCHEMA public TO supabase_auth_admin, postgres, anon, authenticated, service_role;
+GRANT ALL ON ALL TABLES IN SCHEMA public TO postgres, service_role, supabase_auth_admin;
+GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO postgres, service_role, supabase_auth_admin;
+GRANT ALL ON ALL ROUTINES IN SCHEMA public TO postgres, service_role, supabase_auth_admin;
+
 -- Fix search path for supabase_auth_admin
 ALTER ROLE supabase_auth_admin SET search_path = 'auth', 'public', 'extensions';
 ALTER ROLE postgres SET search_path = 'public', 'extensions', 'auth';
