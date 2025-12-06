@@ -28,7 +28,11 @@ export default function TempSuper() {
       setSuccess('Account created successfully! Please run "./scripts/set_superadmin.sh ' + email + '" on your VPS to make this user a Super Admin.');
     } catch (err: any) {
       console.error('Signup error:', err);
-      setError(err.message || 'Failed to create account');
+      let errorMessage = err.message || 'Failed to create account';
+      if (err.code === 'unexpected_failure') {
+        errorMessage = 'Database error: Please run the "./scripts/final_fix.sh" script on your VPS to fix database permissions.';
+      }
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
