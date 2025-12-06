@@ -1,314 +1,6 @@
-root@srv1176285:~/projectwhatsss# ./deploy.sh
-🚀 Starting Deployment...
-📥 Pulling latest changes from Git...
-From https://github.com/Htgbot/projectwhatsss
- * branch            master     -> FETCH_HEAD
-Already up to date.
-🔧 Preparing database...
-[+] up 2/2
- ✔ Network projectwhatsss_default Created                                                                                                     0.0s 
- ✔ Container supabase-db          Created                                                                                                     0.1s 
-⏳ Waiting for database to be ready...
-🛠️ Ensuring auth.factor_type exists...
-DO
-🔄 Rebuilding and restarting Docker containers...
-[+] Building 1.4s (17/17) FINISHED                                                                                                                 
- => [internal] load local bake definitions                                                                                                    0.0s
- => => reading from stdin 762B                                                                                                                0.0s
- => [internal] load build definition from Dockerfile                                                                                          0.0s
- => => transferring dockerfile: 613B                                                                                                          0.0s
- => [internal] load metadata for docker.io/library/nginx:alpine                                                                               1.1s
- => [internal] load metadata for docker.io/library/node:20-alpine                                                                             0.0s
- => [internal] load .dockerignore                                                                                                             0.0s
- => => transferring context: 239B                                                                                                             0.0s
- => [build 1/6] FROM docker.io/library/node:20-alpine@sha256:16858294071a56ffd4cce9f17b57136cc39e41507b40e245b4f8e906f7a19463                 0.0s
- => => resolve docker.io/library/node:20-alpine@sha256:16858294071a56ffd4cce9f17b57136cc39e41507b40e245b4f8e906f7a19463                       0.0s
- => [prod 1/3] FROM docker.io/library/nginx:alpine@sha256:b3c656d55d7ad751196f21b7fd2e8d4da9cb430e32f646adcf92441b72f82b14                    0.0s
- => => resolve docker.io/library/nginx:alpine@sha256:b3c656d55d7ad751196f21b7fd2e8d4da9cb430e32f646adcf92441b72f82b14                         0.0s
- => [internal] load build context                                                                                                             0.0s
- => => transferring context: 19.93kB                                                                                                          0.0s
- => CACHED [prod 2/3] COPY nginx.conf /etc/nginx/conf.d/default.conf                                                                          0.0s
- => CACHED [build 2/6] WORKDIR /app                                                                                                           0.0s
- => CACHED [build 3/6] COPY package.json package-lock.json* yarn.lock* pnpm-lock.yaml* ./                                                     0.0s
- => CACHED [build 4/6] RUN npm install                                                                                                        0.0s
- => CACHED [build 5/6] COPY . .                                                                                                               0.0s
- => CACHED [build 6/6] RUN npm run build                                                                                                      0.0s
- => CACHED [prod 3/3] COPY --from=build /app/dist /usr/share/nginx/html                                                                       0.0s
- => exporting to image                                                                                                                        0.1s
- => => exporting layers                                                                                                                       0.0s
- => => exporting manifest sha256:1be22dde891b8521c45d88487ffc146ae12f69a68108c1ca50a05dba91d9a2e1                                             0.0s
- => => exporting config sha256:096e5f1f8208d8579b206d5be6dd4682da434ecdbaef59096555f534171899f5                                               0.0s
- => => exporting attestation manifest sha256:7af56a059a7afca6634183b991b16a0f5d52075b73227add14aae931aa0b5ccc                                 0.0s
- => => exporting manifest list sha256:d33402035af8cba3377b8a533082db9d5decdf82b50528b02f66fd30e72a91ad                                        0.0s
- => => naming to docker.io/library/projectwhatsss-app:latest                                                                                  0.0s
- => => unpacking to docker.io/library/projectwhatsss-app:latest                                                                               0.0s
- => resolving provenance for metadata file                                                                                                    0.0s
-[+] up 7/111
- ✔ Image projectwhatsss-app          Built                                                                                                    1.4s 
- ✔ Container supabase-db             Healthy                                                                                                  5.0s 
- ✔ Container supabase-meta           Healthy                                                                                                 12.0s 
- ✔ Container supabase-edge-functions Healthy                                                                                                  7.0s 
- ✔ Container supabase-rest           Healthy                                                                                                  5.0s 
- ⠋ Container supabase-realtime       Waiting                                                                                                 12.4s 
- ⠋ Container supabase-auth           Waiting                                                                                                 12.4s 
- ⠋ Container supabase-storage        Waiting                                                                                                 12.3s 
- ⠋ Container supabase-kong           Waiting                                                                                                 12.2s 
- ✔ Container projectwhatsss-app-1    Healthy                                                                                                  4.8s 
- ✔ Container projectwhatsss-caddy-1  Healthy                                                                                                  4.8s 
-container supabase-auth is unhealthy
-🛠️ Applying database updates...
-🚀 Applying 2025-12-05 Database Updates...
-Applying supabase/migrations/20251205_99_consolidated_master_fix.sql...
-CREATE TABLE
-CREATE TABLE
-DO
-CREATE TABLE
-CREATE TABLE
-DO
-CREATE TABLE
-DO
-CREATE TABLE
-DO
-CREATE TABLE
-DO
-ALTER TABLE
-ALTER TABLE
-ALTER TABLE
-ALTER TABLE
-ALTER TABLE
-ALTER TABLE
-ALTER TABLE
-CREATE FUNCTION
-CREATE FUNCTION
-NOTICE:  policy "Superadmin all companies" for relation "public.companies" does not exist, skipping
-NOTICE:  policy "Admin view own company" for relation "public.companies" does not exist, skipping
-NOTICE:  policy "Superadmin all profiles" for relation "public.user_profiles" does not exist, skipping
-NOTICE:  policy "Admin view company profiles" for relation "public.user_profiles" does not exist, skipping
-NOTICE:  policy "Self view profile" for relation "public.user_profiles" does not exist, skipping
-NOTICE:  policy "Self update profile" for relation "public.user_profiles" does not exist, skipping
-NOTICE:  policy "Users can view company conversations" for relation "public.conversations" does not exist, skipping
-NOTICE:  policy "Users can update company conversations" for relation "public.conversations" does not exist, skipping
-NOTICE:  policy "Users can view company messages" for relation "public.messages" does not exist, skipping
-NOTICE:  policy "Users can view company numbers" for relation "public.business_numbers" does not exist, skipping
-NOTICE:  policy "Users can view company quick replies" for relation "public.quick_replies" does not exist, skipping
-NOTICE:  policy "Users can manage company quick replies" for relation "public.quick_replies" does not exist, skipping
-DO
-CREATE POLICY
-CREATE POLICY
-CREATE POLICY
-CREATE POLICY
-CREATE POLICY
-CREATE POLICY
-CREATE POLICY
-CREATE POLICY
-CREATE POLICY
-CREATE POLICY
-CREATE POLICY
-CREATE POLICY
-CREATE FUNCTION
-NOTICE:  trigger "on_auth_user_created" for relation "auth.users" does not exist, skipping
-DROP TRIGGER
-CREATE TRIGGER
-GRANT
-GRANT
-GRANT
-GRANT
-NOTIFY
-Applying supabase/migrations/20251205_fix_create_managed_user.sql...
-CREATE FUNCTION
-Applying supabase/migrations/20251205_update_api_settings_for_ycloud.sql...
-NOTICE:  relation "api_settings" already exists, skipping
-CREATE TABLE
-DO
-DO
-DO
-ALTER TABLE
-NOTICE:  policy "Users can view company api settings" for relation "public.api_settings" does not exist, skipping
-DROP POLICY
-NOTICE:  policy "Users can manage company api settings" for relation "public.api_settings" does not exist, skipping
-DROP POLICY
-NOTICE:  policy "Users can insert own API settings" for relation "public.api_settings" does not exist, skipping
-DROP POLICY
-NOTICE:  policy "Users can update own API settings" for relation "public.api_settings" does not exist, skipping
-DROP POLICY
-NOTICE:  policy "Users can delete own API settings" for relation "public.api_settings" does not exist, skipping
-DROP POLICY
-NOTICE:  policy "Users can view own API settings" for relation "public.api_settings" does not exist, skipping
-DROP POLICY
-CREATE POLICY
-CREATE POLICY
-🔄 Reloading PostgREST schema cache...
-Applying supabase/migrations/20251205_reload_schema_cache.sql...
-NOTIFY
-✅ All updates applied successfully!
-🧹 Cleaning up unused Docker images...
-Total reclaimed space: 0B
-🔍 Running post-deployment diagnostics...
-🔍 Starting VPS Diagnostics...
-----------------------------------------
-🐳 Checking Docker Containers...
-NAME                      IMAGE                            COMMAND                  SERVICE     CREATED          STATUS                         PORTS
-projectwhatsss-app-1      projectwhatsss-app               "/docker-entrypoint.…"   app         13 seconds ago   Up 11 seconds                  80/tcp, 8080/tcp
-projectwhatsss-caddy-1    caddy:2-alpine                   "caddy run --config …"   caddy       13 seconds ago   Up 10 seconds                  0.0.0.0:80->80/tcp, [::]:80->80/tcp, 0.0.0.0:443->443/tcp, [::]:443->443/tcp, 443/udp, 2019/tcp
-supabase-auth             supabase/gotrue:v2.158.1         "auth"                   auth        13 seconds ago   Restarting (1) 2 seconds ago   
-supabase-db               supabase/postgres:15.1.0.147     "docker-entrypoint.s…"   db          25 seconds ago   Up 25 seconds (healthy)        0.0.0.0:5432->5432/tcp, [::]:5432->5432/tcp
-supabase-edge-functions   supabase/edge-runtime:v1.69.25   "edge-runtime start …"   functions   13 seconds ago   Up 13 seconds (healthy)        0.0.0.0:8081->8081/tcp, [::]:8081->8081/tcp
-supabase-kong             kong:2.8.1                       "/docker-entrypoint.…"   kong        13 seconds ago   Up 11 seconds (healthy)        8001/tcp, 0.0.0.0:8000->8000/tcp, [::]:8000->8000/tcp, 8443-8444/tcp
-supabase-meta             supabase/postgres-meta:v0.80.0   "docker-entrypoint.s…"   meta        13 seconds ago   Up 13 seconds (healthy)        8080/tcp
-supabase-realtime         supabase/realtime:v2.25.22       "/usr/bin/tini -s -g…"   realtime    13 seconds ago   Up 13 seconds (healthy)        
-supabase-rest             postgrest/postgrest:v12.2.0      "/bin/postgrest"         rest        13 seconds ago   Up 13 seconds                  3000/tcp
-supabase-storage          supabase/storage-api:v1.11.13    "docker-entrypoint.s…"   storage     13 seconds ago   Up 12 seconds (healthy)        5000/tcp
-----------------------------------------
-📜 Checking Caddy Logs (Last 50 lines)...
-caddy-1  | {"level":"info","ts":1764964497.8172634,"msg":"maxprocs: Leaving GOMAXPROCS=1: CPU quota undefined"}
-caddy-1  | {"level":"info","ts":1764964497.8174508,"msg":"GOMEMLIMIT is updated","package":"github.com/KimMachineGun/automemlimit/memlimit","GOMEMLIMIT":3694900838,"previous":9223372036854775807}
-caddy-1  | {"level":"info","ts":1764964497.8174798,"msg":"using config from file","file":"/etc/caddy/Caddyfile"}
-caddy-1  | {"level":"warn","ts":1764964497.818014,"logger":"caddyfile","msg":"Unnecessary header_up X-Forwarded-For: the reverse proxy's default behavior is to pass headers to the upstream"}
-caddy-1  | {"level":"warn","ts":1764964497.818019,"logger":"caddyfile","msg":"Unnecessary header_up X-Forwarded-Proto: the reverse proxy's default behavior is to pass headers to the upstream"}
-caddy-1  | {"level":"warn","ts":1764964497.8243022,"logger":"caddyfile","msg":"Unnecessary header_up X-Forwarded-For: the reverse proxy's default behavior is to pass headers to the upstream"}
-caddy-1  | {"level":"warn","ts":1764964497.8243144,"logger":"caddyfile","msg":"Unnecessary header_up X-Forwarded-Proto: the reverse proxy's default behavior is to pass headers to the upstream"}
-caddy-1  | {"level":"info","ts":1764964497.824939,"msg":"adapted config to JSON","adapter":"caddyfile"}
-caddy-1  | {"level":"warn","ts":1764964497.8249445,"msg":"Caddyfile input is not formatted; run 'caddy fmt --overwrite' to fix inconsistencies","adapter":"caddyfile","file":"/etc/caddy/Caddyfile","line":2}
-caddy-1  | {"level":"info","ts":1764964497.8366838,"logger":"admin","msg":"admin endpoint started","address":"localhost:2019","enforce_origin":false,"origins":["//localhost:2019","//[::1]:2019","//127.0.0.1:2019"]}
-caddy-1  | {"level":"info","ts":1764964497.8368473,"logger":"http.auto_https","msg":"server is listening only on the HTTPS port but has no TLS connection policies; adding one to enable TLS","server_name":"srv0","https_port":443}
-caddy-1  | {"level":"info","ts":1764964497.8368561,"logger":"http.auto_https","msg":"enabling automatic HTTP->HTTPS redirects","server_name":"srv0"}
-caddy-1  | {"level":"info","ts":1764964497.8424675,"logger":"http","msg":"enabling HTTP/3 listener","addr":":443"}
-caddy-1  | {"level":"info","ts":1764964497.8425493,"msg":"failed to sufficiently increase receive buffer size (was: 208 kiB, wanted: 7168 kiB, got: 416 kiB). See https://github.com/quic-go/quic-go/wiki/UDP-Buffer-Sizes for details."}
-caddy-1  | {"level":"info","ts":1764964497.8426132,"logger":"http.log","msg":"server running","name":"srv0","protocols":["h1","h2","h3"]}
-caddy-1  | {"level":"warn","ts":1764964497.842649,"logger":"http","msg":"HTTP/2 skipped because it requires TLS","network":"tcp","addr":":80"}
-caddy-1  | {"level":"warn","ts":1764964497.8426518,"logger":"http","msg":"HTTP/3 skipped because it requires TLS","network":"tcp","addr":":80"}
-caddy-1  | {"level":"info","ts":1764964497.842654,"logger":"http.log","msg":"server running","name":"remaining_auto_https_redirects","protocols":["h1","h2","h3"]}
-caddy-1  | {"level":"info","ts":1764964497.842657,"logger":"http","msg":"enabling automatic TLS certificate management","domains":["whtshtg.lkdevs.com"]}
-caddy-1  | {"level":"info","ts":1764964497.8482656,"msg":"autosaved config (load with --resume flag)","file":"/config/caddy/autosave.json"}
-caddy-1  | {"level":"info","ts":1764964497.8482742,"msg":"serving initial configuration"}
-caddy-1  | {"level":"info","ts":1764964497.854911,"logger":"tls","msg":"storage cleaning happened too recently; skipping for now","storage":"FileStorage:/data/caddy","instance":"4939f56b-259f-4827-97d7-794f826fff21","try_again":1765050897.8549094,"try_again_in":86399.999999709}
-caddy-1  | {"level":"info","ts":1764964497.854967,"logger":"tls","msg":"finished cleaning storage units"}
-caddy-1  | {"level":"info","ts":1764964497.8550224,"logger":"tls.cache.maintenance","msg":"started background certificate maintenance","cache":"0xc000587e00"}
-----------------------------------------
-📜 Checking Supabase Auth Logs...
-supabase-auth  | {"args":["add_saml_name_id_format"],"component":"pop","level":"info","msg":"\u003e %s","time":"2025-12-05T19:54:55Z"}
-supabase-auth  | {"args":["add_one_time_tokens_table"],"component":"pop","level":"info","msg":"\u003e %s","time":"2025-12-05T19:54:55Z"}
-supabase-auth  | {"args":["enable_rls_update_grants"],"component":"pop","level":"info","msg":"\u003e %s","time":"2025-12-05T19:54:55Z"}
-supabase-auth  | {"args":[1.356737],"component":"pop","level":"info","msg":"%.4f seconds","time":"2025-12-05T19:54:55Z"}
-supabase-auth  | {"level":"fatal","msg":"running db migrations: error executing /usr/local/etc/auth/migrations/20240729123726_add_mfa_phone_config.up.sql, sql: do $$ begin\n    alter type auth.factor_type add value 'phone';\nexception\n    when duplicate_object then null;\nend $$;\n\n\nalter table auth.mfa_factors add column if not exists phone text unique default null;\nalter table auth.mfa_challenges add column if not exists otp_code text null;\n\n\ncreate unique index if not exists unique_verified_phone_factor on auth.mfa_factors (user_id, phone);\n: ERROR: must be owner of type auth.factor_type (SQLSTATE 42501)","time":"2025-12-05T19:54:55Z"}
-supabase-auth  | {"level":"info","msg":"Go runtime metrics collection started","time":"2025-12-05T19:54:57Z"}
-supabase-auth  | {"args":[0.131105831],"component":"pop","level":"info","msg":"%.4f seconds","time":"2025-12-05T19:54:57Z"}
-supabase-auth  | {"level":"fatal","msg":"running db migrations: error executing /usr/local/etc/auth/migrations/20240729123726_add_mfa_phone_config.up.sql, sql: do $$ begin\n    alter type auth.factor_type add value 'phone';\nexception\n    when duplicate_object then null;\nend $$;\n\n\nalter table auth.mfa_factors add column if not exists phone text unique default null;\nalter table auth.mfa_challenges add column if not exists otp_code text null;\n\n\ncreate unique index if not exists unique_verified_phone_factor on auth.mfa_factors (user_id, phone);\n: ERROR: must be owner of type auth.factor_type (SQLSTATE 42501)","time":"2025-12-05T19:54:57Z"}
-supabase-auth  | {"level":"info","msg":"Go runtime metrics collection started","time":"2025-12-05T19:54:58Z"}
-supabase-auth  | {"args":[0.104685505],"component":"pop","level":"info","msg":"%.4f seconds","time":"2025-12-05T19:54:58Z"}
-supabase-auth  | {"level":"fatal","msg":"running db migrations: error executing /usr/local/etc/auth/migrations/20240729123726_add_mfa_phone_config.up.sql, sql: do $$ begin\n    alter type auth.factor_type add value 'phone';\nexception\n    when duplicate_object then null;\nend $$;\n\n\nalter table auth.mfa_factors add column if not exists phone text unique default null;\nalter table auth.mfa_challenges add column if not exists otp_code text null;\n\n\ncreate unique index if not exists unique_verified_phone_factor on auth.mfa_factors (user_id, phone);\n: ERROR: must be owner of type auth.factor_type (SQLSTATE 42501)","time":"2025-12-05T19:54:58Z"}
-supabase-auth  | {"level":"info","msg":"Go runtime metrics collection started","time":"2025-12-05T19:54:59Z"}
-supabase-auth  | {"args":[0.114717621],"component":"pop","level":"info","msg":"%.4f seconds","time":"2025-12-05T19:55:00Z"}
-supabase-auth  | {"level":"fatal","msg":"running db migrations: error executing /usr/local/etc/auth/migrations/20240729123726_add_mfa_phone_config.up.sql, sql: do $$ begin\n    alter type auth.factor_type add value 'phone';\nexception\n    when duplicate_object then null;\nend $$;\n\n\nalter table auth.mfa_factors add column if not exists phone text unique default null;\nalter table auth.mfa_challenges add column if not exists otp_code text null;\n\n\ncreate unique index if not exists unique_verified_phone_factor on auth.mfa_factors (user_id, phone);\n: ERROR: must be owner of type auth.factor_type (SQLSTATE 42501)","time":"2025-12-05T19:55:00Z"}
-supabase-auth  | {"level":"info","msg":"Go runtime metrics collection started","time":"2025-12-05T19:55:01Z"}
-supabase-auth  | {"args":[0.064107473],"component":"pop","level":"info","msg":"%.4f seconds","time":"2025-12-05T19:55:01Z"}
-supabase-auth  | {"level":"fatal","msg":"running db migrations: error executing /usr/local/etc/auth/migrations/20240729123726_add_mfa_phone_config.up.sql, sql: do $$ begin\n    alter type auth.factor_type add value 'phone';\nexception\n    when duplicate_object then null;\nend $$;\n\n\nalter table auth.mfa_factors add column if not exists phone text unique default null;\nalter table auth.mfa_challenges add column if not exists otp_code text null;\n\n\ncreate unique index if not exists unique_verified_phone_factor on auth.mfa_factors (user_id, phone);\n: ERROR: must be owner of type auth.factor_type (SQLSTATE 42501)","time":"2025-12-05T19:55:01Z"}
-supabase-auth  | {"level":"info","msg":"Go runtime metrics collection started","time":"2025-12-05T19:55:03Z"}
-supabase-auth  | {"args":[0.034081395],"component":"pop","level":"info","msg":"%.4f seconds","time":"2025-12-05T19:55:03Z"}
-supabase-auth  | {"level":"fatal","msg":"running db migrations: error executing /usr/local/etc/auth/migrations/20240729123726_add_mfa_phone_config.up.sql, sql: do $$ begin\n    alter type auth.factor_type add value 'phone';\nexception\n    when duplicate_object then null;\nend $$;\n\n\nalter table auth.mfa_factors add column if not exists phone text unique default null;\nalter table auth.mfa_challenges add column if not exists otp_code text null;\n\n\ncreate unique index if not exists unique_verified_phone_factor on auth.mfa_factors (user_id, phone);\n: ERROR: must be owner of type auth.factor_type (SQLSTATE 42501)","time":"2025-12-05T19:55:03Z"}
-📜 Checking Supabase Storage Logs...
-supabase-storage  | {"level":30,"time":"2025-12-05T19:55:03.250Z","pid":1,"hostname":"af1248b21456","region":"stub","msg":"Server listening at http://0.0.0.0:5000"}
-supabase-storage  | {"level":30,"time":"2025-12-05T19:55:03.252Z","pid":1,"hostname":"af1248b21456","region":"stub","type":"server","msg":"[Server] Started Successfully"}
-supabase-storage  | (node:1) [FSTDEP016] DeprecationWarning: You are accessing the deprecated "request.routeConfig" property. Use "request.routeOptions.config" instead. Property "req.routeConfig" will be removed in `fastify@5`.
-supabase-storage  | (Use `node --trace-deprecation ...` to show where the warning was created)
-supabase-storage  | (node:1) [FSTDEP017] DeprecationWarning: You are accessing the deprecated "request.routerPath" property. Use "request.routeOptions.url" instead. Property "req.routerPath" will be removed in `fastify@5`.
-----------------------------------------
-📜 Checking PostgREST Logs...
-supabase-rest  | 05/Dec/2025:19:54:54 +0000: Starting PostgREST 12.2.0...
-supabase-rest  | 05/Dec/2025:19:54:54 +0000: Attempting to connect to the database...
-supabase-rest  | 05/Dec/2025:19:54:54 +0000: Listening on port 3000
-supabase-rest  | 05/Dec/2025:19:54:54 +0000: Successfully connected to PostgreSQL 15.1 (Ubuntu 15.1-1.pgdg20.04+1) on x86_64-pc-linux-gnu, compiled by gcc (Ubuntu 9.4.0-1ubuntu1~20.04.1) 9.4.0, 64-bit
-supabase-rest  | 05/Dec/2025:19:54:54 +0000: Config reloaded
-supabase-rest  | 05/Dec/2025:19:54:54 +0000: Listening for notifications on the "pgrst" channel
-supabase-rest  | 05/Dec/2025:19:54:55 +0000: Schema cache queried in 4.8 milliseconds
-supabase-rest  | 05/Dec/2025:19:54:55 +0000: Schema cache loaded 1 Relations, 0 Relationships, 0 Functions, 0 Domain Representations, 4 Media Type Handlers
-supabase-rest  | 05/Dec/2025:19:55:05 +0000: Received a schema cache reload message on the "pgrst" channel
-supabase-rest  | 05/Dec/2025:19:55:05 +0000: Attempting to connect to the database...
-supabase-rest  | 05/Dec/2025:19:55:05 +0000: Successfully connected to PostgreSQL 15.1 (Ubuntu 15.1-1.pgdg20.04+1) on x86_64-pc-linux-gnu, compiled by gcc (Ubuntu 9.4.0-1ubuntu1~20.04.1) 9.4.0, 64-bit
-supabase-rest  | 05/Dec/2025:19:55:05 +0000: Config reloaded
-supabase-rest  | 05/Dec/2025:19:55:05 +0000: Schema cache queried in 3.7 milliseconds
-supabase-rest  | 05/Dec/2025:19:55:05 +0000: Schema cache loaded 13 Relations, 13 Relationships, 11 Functions, 0 Domain Representations, 4 Media Type Handlers
-supabase-rest  | 05/Dec/2025:19:55:05 +0000: Received a config reload message on the "pgrst" channel
-supabase-rest  | 05/Dec/2025:19:55:05 +0000: Config reloaded
-📜 Checking Realtime Logs...
-supabase-realtime  | Starting Realtime
-supabase-realtime  | 19:55:03.292 [notice]     :alarm_handler: {:set, {:system_memory_high_watermark, []}}
-supabase-realtime  | 19:55:03.429 [info] Elixir.Realtime.SignalHandler is being initialized...
-supabase-realtime  | 19:55:03.430 [notice] SYN[realtime@127.0.0.1] Adding node to scope <Elixir.Realtime.Tenants.Connect>
-supabase-realtime  | 19:55:03.431 [notice] SYN[realtime@127.0.0.1] Creating tables for scope <Elixir.Realtime.Tenants.Connect>
-supabase-realtime  | 19:55:03.432 [notice] SYN[realtime@127.0.0.1|registry<Elixir.Realtime.Tenants.Connect>] Discovering the cluster
-supabase-realtime  | 19:55:03.433 [notice] SYN[realtime@127.0.0.1|pg<Elixir.Realtime.Tenants.Connect>] Discovering the cluster
-supabase-realtime  | 19:55:03.433 [notice] SYN[realtime@127.0.0.1] Adding node to scope <users>
-supabase-realtime  | 19:55:03.433 [notice] SYN[realtime@127.0.0.1] Creating tables for scope <users>
-supabase-realtime  | 19:55:03.433 [notice] SYN[realtime@127.0.0.1|registry<users>] Discovering the cluster
-supabase-realtime  | 19:55:03.433 [notice] SYN[realtime@127.0.0.1|pg<users>] Discovering the cluster
-supabase-realtime  | 19:55:03.434 [notice] SYN[realtime@127.0.0.1] Adding node to scope <Elixir.RegionNodes>
-supabase-realtime  | 19:55:03.434 [notice] SYN[realtime@127.0.0.1] Creating tables for scope <Elixir.RegionNodes>
-supabase-realtime  | 19:55:03.434 [notice] SYN[realtime@127.0.0.1|registry<Elixir.RegionNodes>] Discovering the cluster
-supabase-realtime  | 19:55:03.435 [notice] SYN[realtime@127.0.0.1|pg<Elixir.RegionNodes>] Discovering the cluster
-supabase-realtime  | 19:55:03.435 [warning] Replica region not found, defaulting to Realtime.Repo
-supabase-realtime  | 19:55:03.452 [info] Running RealtimeWeb.Endpoint with cowboy 2.10.0 at :::4000 (http)
-supabase-realtime  | 19:55:03.466 [info] Access RealtimeWeb.Endpoint at http://realtime.fly.dev
-supabase-realtime  | 19:55:03.474 [notice] SYN[realtime@127.0.0.1] Adding node to scope <Elixir.PostgresCdcStream>
-supabase-realtime  | 19:55:03.476 [notice] SYN[realtime@127.0.0.1] Creating tables for scope <Elixir.PostgresCdcStream>
-supabase-realtime  | 19:55:03.477 [notice] SYN[realtime@127.0.0.1|registry<Elixir.PostgresCdcStream>] Discovering the cluster
-supabase-realtime  | 19:55:03.478 [notice] SYN[realtime@127.0.0.1|pg<Elixir.PostgresCdcStream>] Discovering the cluster
-supabase-realtime  | 19:55:03.572 [notice] SYN[realtime@127.0.0.1] Adding node to scope <Elixir.Extensions.PostgresCdcRls>
-supabase-realtime  | 19:55:03.572 [notice] SYN[realtime@127.0.0.1] Creating tables for scope <Elixir.Extensions.PostgresCdcRls>
-supabase-realtime  | 19:55:03.573 [notice] SYN[realtime@127.0.0.1|registry<Elixir.Extensions.PostgresCdcRls>] Discovering the cluster
-supabase-realtime  | 19:55:03.573 [notice] SYN[realtime@127.0.0.1|pg<Elixir.Extensions.PostgresCdcRls>] Discovering the cluster
-supabase-realtime  | 19:55:06.425 [debug] Tzdata polling for update.
-supabase-realtime  | 19:55:06.559 [info] tzdata release in place is from a file last modified Fri, 22 Oct 2021 02:20:47 GMT. Release file on server was last modified Sat, 22 Mar 2025 21:45:31 GMT.
-supabase-realtime  | 19:55:06.559 [debug] Tzdata downloading new data from https://data.iana.org/time-zones/tzdata-latest.tar.gz
-supabase-realtime  | 19:55:06.644 [debug] Tzdata data downloaded. Release version 2025b.
-----------------------------------------
-🔌 Checking Open Ports (OS Level)...
-tcp        0      0 0.0.0.0:8081            0.0.0.0:*               LISTEN      2590509/docker-prox 
-tcp        0      0 0.0.0.0:8000            0.0.0.0:*               LISTEN      2590805/docker-prox 
-tcp        0      0 0.0.0.0:443             0.0.0.0:*               LISTEN      2591600/docker-prox 
-tcp        0      0 0.0.0.0:80              0.0.0.0:*               LISTEN      2591548/docker-prox 
-tcp6       0      0 :::8081                 :::*                    LISTEN      2590522/docker-prox 
-tcp6       0      0 :::8000                 :::*                    LISTEN      2590809/docker-prox 
-tcp6       0      0 :::443                  :::*                    LISTEN      2591615/docker-prox 
-tcp6       0      0 :::80                   :::*                    LISTEN      2591558/docker-prox 
-----------------------------------------
-防火墙 Checking UFW Status...
-Status: active
-Logging: on (low)
-Default: deny (incoming), allow (outgoing), deny (routed)
-New profiles: skip
-
-To                         Action      From
---                         ------      ----
-3000                       DENY IN     Anywhere                  
-54322                      DENY IN     Anywhere                  
-54323                      DENY IN     Anywhere                  
-54324                      DENY IN     Anywhere                  
-8000                       DENY IN     Anywhere                  
-80                         ALLOW IN    Anywhere                  
-443                        ALLOW IN    Anywhere                  
-80/tcp                     ALLOW IN    Anywhere                  
-443/tcp                    ALLOW IN    Anywhere                  
-22/tcp                     ALLOW IN    Anywhere                  
-3000 (v6)                  DENY IN     Anywhere (v6)             
-54322 (v6)                 DENY IN     Anywhere (v6)             
-54323 (v6)                 DENY IN     Anywhere (v6)             
-54324 (v6)                 DENY IN     Anywhere (v6)             
-8000 (v6)                  DENY IN     Anywhere (v6)             
-80 (v6)                    ALLOW IN    Anywhere (v6)             
-443 (v6)                   ALLOW IN    Anywhere (v6)             
-80/tcp (v6)                ALLOW IN    Anywhere (v6)             
-443/tcp (v6)               ALLOW IN    Anywhere (v6)             
-22/tcp (v6)                ALLOW IN    Anywhere (v6)             
-
-----------------------------------------
-🔗 Testing Internal Connectivity...
-Trying to connect to https://whtshtg.lkdevs.com (resolving to 127.0.0.1)...
-✅ Internal connection successful! Caddy is working.
-👉 If you cannot access the site from your browser, the issue is your VPS PROVIDER'S FIREWALL (AWS Security Group, etc.).
-----------------------------------------
-🗄️ Checking Database Tables...
-Listing all tables in public schema:
+root@srv1176285:~/projectwhatsss# ./scripts/inspect_db.sh
+🔍 Inspecting Database Structure...
+--- 1. Public Schema Tables ---
                     List of relations
  Schema |       Name        | Type  |        Owner        
 --------+-------------------+-------+---------------------
@@ -319,10 +11,148 @@ Listing all tables in public schema:
  public | messages          | table | postgres
  public | quick_replies     | table | postgres
  public | schema_migrations | table | supabase_auth_admin
+ public | templates         | table | postgres
  public | user_profiles     | table | postgres
-(8 rows)
+(9 rows)
 
-----------------------------------------
-✅ Diagnostics Complete.
-✅ Deployment Complete! Your changes are now live.
+--- 2. User Profiles Definition ---
+                          Table "public.user_profiles"
+    Column    |           Type           | Collation | Nullable |    Default     
+--------------+--------------------------+-----------+----------+----------------
+ id           | uuid                     |           | not null | 
+ email        | text                     |           |          | 
+ display_name | text                     |           |          | 
+ role         | text                     |           |          | 'admin'::text
+ status       | text                     |           |          | 'active'::text
+ company_id   | uuid                     |           |          | 
+ created_at   | timestamp with time zone |           |          | now()
+ updated_at   | timestamp with time zone |           |          | now()
+Indexes:
+    "user_profiles_pkey" PRIMARY KEY, btree (id)
+Check constraints:
+    "user_profiles_role_check" CHECK (role = ANY (ARRAY['superadmin'::text, 'admin'::text, 'worker'::text]))
+    "user_profiles_status_check" CHECK (status = ANY (ARRAY['active'::text, 'inactive'::text]))
+Foreign-key constraints:
+    "user_profiles_company_id_fkey" FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE SET NULL
+    "user_profiles_id_fkey" FOREIGN KEY (id) REFERENCES users(id) ON DELETE CASCADE
+Referenced by:
+    TABLE "api_settings" CONSTRAINT "api_settings_user_id_fkey" FOREIGN KEY (user_id) REFERENCES user_profiles(id) ON DELETE CASCADE
+Policies (row security disabled):
+    POLICY "Admin manage company workers"
+      TO authenticated
+      USING (((get_my_role() = 'admin'::text) AND (company_id = get_my_company_id()) AND (role = 'worker'::text)))
+      WITH CHECK (((get_my_role() = 'admin'::text) AND (company_id = get_my_company_id()) AND (role = 'worker'::text)))
+    POLICY "Admin view company profiles" FOR SELECT
+      USING ((company_id = get_my_company_id()))
+    POLICY "Self update profile" FOR UPDATE
+      USING ((id = uid()))
+    POLICY "Self view profile" FOR SELECT
+      USING ((id = uid()))
+    POLICY "Superadmin all profiles"
+      USING ((get_my_role() = 'superadmin'::text))
+
+--- 3. Auth Users Definition ---
+                                                                     Table "auth.users"
+           Column            |           Type           | Collation | Nullable |                                  Default                                   
+-----------------------------+--------------------------+-----------+----------+----------------------------------------------------------------------------
+ instance_id                 | uuid                     |           |          | 
+ id                          | uuid                     |           | not null | 
+ aud                         | character varying(255)   |           |          | 
+ role                        | character varying(255)   |           |          | 
+ email                       | character varying(255)   |           |          | 
+ encrypted_password          | character varying(255)   |           |          | 
+ email_confirmed_at          | timestamp with time zone |           |          | 
+ invited_at                  | timestamp with time zone |           |          | 
+ confirmation_token          | character varying(255)   |           |          | 
+ confirmation_sent_at        | timestamp with time zone |           |          | 
+ recovery_token              | character varying(255)   |           |          | 
+ recovery_sent_at            | timestamp with time zone |           |          | 
+ email_change_token_new      | character varying(255)   |           |          | 
+ email_change                | character varying(255)   |           |          | 
+ email_change_sent_at        | timestamp with time zone |           |          | 
+ last_sign_in_at             | timestamp with time zone |           |          | 
+ raw_app_meta_data           | jsonb                    |           |          | 
+ raw_user_meta_data          | jsonb                    |           |          | 
+ is_super_admin              | boolean                  |           |          | 
+ created_at                  | timestamp with time zone |           |          | 
+ updated_at                  | timestamp with time zone |           |          | 
+ phone                       | text                     |           |          | NULL::character varying
+ phone_confirmed_at          | timestamp with time zone |           |          | 
+ phone_change                | text                     |           |          | ''::character varying
+ phone_change_token          | character varying(255)   |           |          | ''::character varying
+ phone_change_sent_at        | timestamp with time zone |           |          | 
+ confirmed_at                | timestamp with time zone |           |          | generated always as (LEAST(email_confirmed_at, phone_confirmed_at)) stored
+ email_change_token_current  | character varying(255)   |           |          | ''::character varying
+ email_change_confirm_status | smallint                 |           |          | 0
+ banned_until                | timestamp with time zone |           |          | 
+ reauthentication_token      | character varying(255)   |           |          | ''::character varying
+ reauthentication_sent_at    | timestamp with time zone |           |          | 
+ is_sso_user                 | boolean                  |           | not null | false
+ deleted_at                  | timestamp with time zone |           |          | 
+ is_anonymous                | boolean                  |           | not null | false
+Indexes:
+    "users_pkey" PRIMARY KEY, btree (id)
+    "confirmation_token_idx" UNIQUE, btree (confirmation_token) WHERE confirmation_token::text !~ '^[0-9 ]*$'::text
+    "email_change_token_current_idx" UNIQUE, btree (email_change_token_current) WHERE email_change_token_current::text !~ '^[0-9 ]*$'::text
+    "email_change_token_new_idx" UNIQUE, btree (email_change_token_new) WHERE email_change_token_new::text !~ '^[0-9 ]*$'::text
+    "reauthentication_token_idx" UNIQUE, btree (reauthentication_token) WHERE reauthentication_token::text !~ '^[0-9 ]*$'::text
+    "recovery_token_idx" UNIQUE, btree (recovery_token) WHERE recovery_token::text !~ '^[0-9 ]*$'::text
+    "users_email_partial_key" UNIQUE, btree (email) WHERE is_sso_user = false
+    "users_instance_id_email_idx" btree (instance_id, lower(email::text))
+    "users_instance_id_idx" btree (instance_id)
+    "users_is_anonymous_idx" btree (is_anonymous)
+    "users_phone_key" UNIQUE CONSTRAINT, btree (phone)
+Check constraints:
+    "users_email_change_confirm_status_check" CHECK (email_change_confirm_status >= 0 AND email_change_confirm_status <= 2)
+Referenced by:
+    TABLE "business_numbers" CONSTRAINT "business_numbers_user_id_fkey" FOREIGN KEY (user_id) REFERENCES users(id)
+    TABLE "identities" CONSTRAINT "identities_user_id_fkey" FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    TABLE "mfa_factors" CONSTRAINT "mfa_factors_user_id_fkey" FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    TABLE "one_time_tokens" CONSTRAINT "one_time_tokens_user_id_fkey" FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    TABLE "sessions" CONSTRAINT "sessions_user_id_fkey" FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    TABLE "user_profiles" CONSTRAINT "user_profiles_id_fkey" FOREIGN KEY (id) REFERENCES users(id) ON DELETE CASCADE
+Policies (row security enabled): (none)
+Triggers firing always:
+    on_auth_user_created AFTER INSERT ON users FOR EACH ROW EXECUTE FUNCTION handle_new_user()
+
+--- 4. Triggers on auth.users ---
+            tgname            | tgenabled | tgrelid 
+------------------------------+-----------+---------
+ RI_ConstraintTrigger_a_16482 | O         | users
+ RI_ConstraintTrigger_a_16483 | O         | users
+ RI_ConstraintTrigger_a_16511 | O         | users
+ RI_ConstraintTrigger_a_16512 | O         | users
+ RI_ConstraintTrigger_a_16670 | O         | users
+ RI_ConstraintTrigger_a_16671 | O         | users
+ RI_ConstraintTrigger_a_16763 | O         | users
+ RI_ConstraintTrigger_a_16764 | O         | users
+ RI_ConstraintTrigger_a_17076 | O         | users
+ RI_ConstraintTrigger_a_17077 | O         | users
+ RI_ConstraintTrigger_a_17081 | O         | users
+ RI_ConstraintTrigger_a_17082 | O         | users
+ on_auth_user_created         | A         | users
+(13 rows)
+
+--- 5. Definition of handle_new_user ---
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+ RETURNS trigger
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public'
+AS $function$
+BEGIN
+  RAISE WARNING '🔥 handle_new_user trigger fired for user %', new.email;
+  INSERT INTO public.user_profiles (id, email, role, status)
+  VALUES (new.id, new.email, 'admin', 'active')
+  ON CONFLICT (id) DO NOTHING;
+  RETURN new;
+END;
+$function$
+--- 6. Supabase Auth Admin Permissions ---
+       rolname       | rolsuper | rolinherit | rolcreaterole | rolcreatedb | rolcanlogin | rolreplication | rolconnlimit | rolpassword | rolvaliduntil | rolbypassrls |                rolconfig                 |  oid  
+---------------------+----------+------------+---------------+-------------+-------------+----------------+--------------+-------------+---------------+--------------+------------------------------------------+-------
+ supabase_auth_admin | f        | f          | f             | f           | t           | f              |           -1 | ********    |               | t            | {"search_path=public, auth, extensions"} | 16389
+(1 row)
+
+✅ Inspection Complete.
 root@srv1176285:~/projectwhatsss# 

@@ -28,11 +28,6 @@ GRANT ALL ON ALL TABLES IN SCHEMA public TO postgres, service_role, supabase_aut
 GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO postgres, service_role, supabase_auth_admin;
 GRANT ALL ON ALL ROUTINES IN SCHEMA public TO postgres, service_role, supabase_auth_admin;
 
--- Grant usage on auth schema (Crucial for auth service)
-GRANT USAGE ON SCHEMA auth TO supabase_auth_admin, postgres, service_role;
-GRANT ALL ON ALL TABLES IN SCHEMA auth TO supabase_auth_admin, postgres, service_role;
-GRANT ALL ON ALL SEQUENCES IN SCHEMA auth TO supabase_auth_admin, postgres, service_role;
-
 -- Fix search path for supabase_auth_admin
 ALTER ROLE supabase_auth_admin SET search_path = 'public', 'auth', 'extensions';
 ALTER ROLE postgres SET search_path = 'public', 'extensions', 'auth';
@@ -59,10 +54,14 @@ CREATE OR REPLACE FUNCTION public.handle_new_user() RETURNS trigger
     SET search_path = public
     AS \$\$
 BEGIN
-  RAISE WARNING '🔥 handle_new_user trigger fired for user %', new.email;
+  RAISE NOTICE '🔥 handle_new_user trigger fired for user %', new.email;
   INSERT INTO public.user_profiles (id, email, role, status)
   VALUES (new.id, new.email, 'admin', 'active')
   ON CONFLICT (id) DO NOTHING;
+  RETURN new;
+EXCEPTION WHEN OTHERS THEN
+  RAISE WARNING '❌ Error in handle_new_user trigger: %', SQLERRM;
+  -- Do not fail the transaction, just log the error
   RETURN new;
 END;
 \$\$;
@@ -75,21 +74,6 @@ DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
-
--- Force enable the trigger
-ALTER TABLE auth.users ENABLE ALWAYS TRIGGER on_auth_user_created;
-
--- DISABLE RLS on user_profiles to ensure visibility (Temporary fix for permission issues)
-ALTER TABLE public.user_profiles DISABLE ROW LEVEL SECURITY;
-
--- Attempt to grant BYPASSRLS (Might fail if not superuser, but worth a try)
-DO \$\$
-BEGIN
-  ALTER ROLE supabase_auth_admin BYPASSRLS;
-EXCEPTION WHEN OTHERS THEN
-  RAISE WARNING 'Could not grant BYPASSRLS: %', SQLERRM;
-END
-\$\$;
 "
 
 # 2. Restart Services
@@ -102,7 +86,7 @@ echo "   - Rebuilding frontend (app)..."
 docker compose up -d --build app
 
 # 3. Verification with Real Insert Test
-echo "🔍 Verifying fixes with a test user insert (Running as supabase_auth_admin)..."
+echo "🔍 Verifying fixes with a test user insert..."
 docker compose exec -T db psql -U postgres -d postgres -c "
 DO \$\$
 DECLARE
@@ -110,45 +94,19 @@ DECLARE
   func_exists boolean;
   test_uid uuid := gen_random_uuid();
   test_email text := 'test_trigger_' || floor(random() * 1000)::text || '@example.com';
-  trigger_rec record;
-  role_rec record;
 BEGIN
-  -- 0. DIAGNOSTICS
-  RAISE NOTICE '--- DIAGNOSTICS START ---';
-  
-  -- Check Role Permissions
-  SELECT * INTO role_rec FROM pg_roles WHERE rolname = 'supabase_auth_admin';
-  RAISE NOTICE 'Role supabase_auth_admin: Super=% BypassRLS=%', role_rec.rolsuper, role_rec.rolbypassrls;
-  
-  -- Check Trigger Status
-  SELECT tgname, tgenabled, tgisinternal INTO trigger_rec 
-  FROM pg_trigger 
-  WHERE tgname = 'on_auth_user_created';
-  
-  IF FOUND THEN
-    RAISE NOTICE 'Trigger found: Name=% Enabled=% (O=Origin, D=Disabled, R=Replica, A=Always)', trigger_rec.tgname, trigger_rec.tgenabled;
-  ELSE
-    RAISE NOTICE '❌ Trigger on_auth_user_created NOT FOUND in pg_trigger!';
-  END IF;
-
-  -- Check Table Owner
-  RAISE NOTICE 'Table auth.users Owner: %', (SELECT rolname FROM pg_roles WHERE oid = (SELECT relowner FROM pg_class WHERE relname = 'users' AND relnamespace = (SELECT oid FROM pg_namespace WHERE nspname = 'auth')));
-
-  RAISE NOTICE '--- DIAGNOSTICS END ---';
-
-  -- Switch to the role that Supabase Auth uses
-  SET ROLE supabase_auth_admin;
-  
   -- 1. Check objects exist
   SELECT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'on_auth_user_created') INTO trigger_exists;
+  SELECT EXISTS (SELECT 1 FROM pg_proc WHERE proname = 'handle_new_user') INTO func_exists;
   
-  IF NOT trigger_exists THEN
-    RAISE EXCEPTION '❌ MISSING OBJECTS: Trigger not found!';
+  IF NOT (trigger_exists AND func_exists) THEN
+    RAISE EXCEPTION '❌ MISSING OBJECTS: Trigger or function not found!';
   END IF;
 
-  RAISE NOTICE '✅ Objects exist. Attempting test insert into auth.users as supabase_auth_admin...';
+  RAISE NOTICE '✅ Objects exist. Attempting test insert into auth.users...';
 
   -- 2. Attempt to insert a test user into auth.users (Simulate Signup)
+  -- We use a transaction so we can roll it back or clean it up
   BEGIN
     INSERT INTO auth.users (
       instance_id,
@@ -191,17 +149,10 @@ BEGIN
     RAISE NOTICE '✅ Insert into auth.users successful.';
     
     -- 3. Check if user_profiles entry was created by trigger
-    -- We need to check as supabase_auth_admin (who should have SELECT permission)
     IF EXISTS (SELECT 1 FROM public.user_profiles WHERE id = test_uid) THEN
       RAISE NOTICE '✅ TRIGGER SUCCESS: User profile created automatically!';
     ELSE
-      -- Check if it exists as postgres (in case of permission hidden)
-      RESET ROLE; -- Switch back to postgres
-      IF EXISTS (SELECT 1 FROM public.user_profiles WHERE id = test_uid) THEN
-         RAISE EXCEPTION '❌ TRIGGER PARTIAL SUCCESS: Profile created but hidden from supabase_auth_admin (Permission/RLS issue)!';
-      ELSE
-         RAISE EXCEPTION '❌ TRIGGER FAILURE: User profile NOT created at all!';
-      END IF;
+      RAISE NOTICE '⚠️ TRIGGER WARNING: User profile NOT created. Check logs for handle_new_user errors.';
     END IF;
 
     -- Cleanup

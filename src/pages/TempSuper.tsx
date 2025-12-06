@@ -1,9 +1,8 @@
 import { useState } from 'react';
-import { useAuth } from '../contexts/AuthContext';
+import { supabase } from '../lib/supabase';
 import { ShieldCheck } from 'lucide-react';
 
 export default function TempSuper() {
-  const { signUp } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
