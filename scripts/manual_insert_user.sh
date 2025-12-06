@@ -1,26 +1,31 @@
 #!/bin/bash
 # Manually Create Super Admin User (Bypassing API)
-# Usage: ./scripts/manual_insert_user.sh <email> <password>
+# Usage: ./scripts/manual_insert_user.sh <email> '<password>'
 
 EMAIL=$1
 PASSWORD=$2
 
 if [ -z "$EMAIL" ] || [ -z "$PASSWORD" ]; then
-  echo "Usage: ./scripts/manual_insert_user.sh <email> <password>"
-  echo "Example: ./scripts/manual_insert_user.sh admin@example.com mysecurepassword"
+  echo "Usage: ./scripts/manual_insert_user.sh <email> '<password>'"
+  echo "⚠️  IMPORTANT: Wrap your password in single quotes if it contains special characters!"
+  echo "Example: ./scripts/manual_insert_user.sh info@htgsuper.com 'my&super#pass'"
   exit 1
 fi
 
 echo "🚀 Manually creating Super Admin user: $EMAIL"
 
-# Check if pgcrypto is installed
-PGCRYPTO_CHECK=$(docker compose exec -T db psql -U postgres -d postgres -tAc "SELECT count(*) FROM pg_extension WHERE extname = 'pgcrypto';")
+# 1. Fix pgcrypto by removing the blocking script
+# The previous fix attempt created a file that Postgres can't read, causing the permission error.
+# We must remove it to allow the extension creation to proceed (or skip the hook gracefully).
+echo "   - Cleaning up conflicting custom scripts..."
+docker compose exec -T db bash -c "rm -f /etc/postgresql-custom/extension-custom-scripts/before-create.sql"
 
-if [ "$PGCRYPTO_CHECK" != "1" ]; then
-  echo "⚠️  pgcrypto extension is MISSING. Attempting to install..."
-  ./scripts/fix_pg_permissions.sh
-fi
+# 2. Ensure pgcrypto is installed
+echo "   - Ensuring pgcrypto extension..."
+# We use 'extensions' schema which is standard for Supabase
+docker compose exec -T db psql -U postgres -d postgres -c "CREATE EXTENSION IF NOT EXISTS \"pgcrypto\" SCHEMA extensions;"
 
+# 3. Insert the User
 echo "   - Inserting user into database..."
 
 docker compose exec -T db psql -U postgres -d postgres -c "
