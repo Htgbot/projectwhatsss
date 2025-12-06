@@ -26,6 +26,22 @@ GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA extensions TO supabase_auth_admin, post
 ALTER ROLE supabase_auth_admin SET search_path = 'auth', 'public', 'extensions';
 ALTER ROLE postgres SET search_path = 'public', 'extensions', 'auth';
 
+-- Ensure user_profiles table exists (Safety net)
+CREATE TABLE IF NOT EXISTS public.user_profiles (
+    id uuid PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+    email text,
+    display_name text,
+    role text DEFAULT 'admin' CHECK (role IN ('superadmin', 'admin', 'worker')),
+    status text DEFAULT 'active' CHECK (status IN ('active', 'inactive')),
+    company_id uuid,
+    created_at timestamptz DEFAULT now(),
+    updated_at timestamptz DEFAULT now()
+);
+
+-- Grant permissions on user_profiles
+GRANT ALL ON public.user_profiles TO postgres, service_role, supabase_auth_admin;
+GRANT SELECT ON public.user_profiles TO authenticated, anon;
+
 -- Create or replace the handle_new_user function
 CREATE OR REPLACE FUNCTION public.handle_new_user() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
