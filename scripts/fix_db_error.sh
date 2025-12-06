@@ -80,4 +80,24 @@ docker compose restart auth
 echo "   - Rebuilding frontend (app)..."
 docker compose up -d --build app
 
+# 3. Verification
+echo "🔍 Verifying fixes..."
+docker compose exec -T db psql -U postgres -d postgres -c "
+DO \$\$
+DECLARE
+  trigger_exists boolean;
+  func_exists boolean;
+BEGIN
+  SELECT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'on_auth_user_created') INTO trigger_exists;
+  SELECT EXISTS (SELECT 1 FROM pg_proc WHERE proname = 'handle_new_user') INTO func_exists;
+  
+  IF trigger_exists AND func_exists THEN
+    RAISE NOTICE '✅ VERIFICATION PASSED: Trigger and function exist.';
+  ELSE
+    RAISE NOTICE '❌ VERIFICATION FAILED: Trigger or function missing!';
+  END IF;
+END
+\$\$;
+"
+
 echo "✅ Database fixes applied. Please try creating the user again at /tempsuper"
