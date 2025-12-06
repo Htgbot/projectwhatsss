@@ -80,24 +80,86 @@ docker compose restart auth
 echo "   - Rebuilding frontend (app)..."
 docker compose up -d --build app
 
-# 3. Verification
-echo "🔍 Verifying fixes..."
+# 3. Verification with Real Insert Test
+echo "🔍 Verifying fixes with a test user insert..."
 docker compose exec -T db psql -U postgres -d postgres -c "
 DO \$\$
 DECLARE
   trigger_exists boolean;
   func_exists boolean;
+  test_uid uuid := gen_random_uuid();
+  test_email text := 'test_trigger_' || floor(random() * 1000)::text || '@example.com';
 BEGIN
+  -- 1. Check objects exist
   SELECT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'on_auth_user_created') INTO trigger_exists;
   SELECT EXISTS (SELECT 1 FROM pg_proc WHERE proname = 'handle_new_user') INTO func_exists;
   
-  IF trigger_exists AND func_exists THEN
-    RAISE NOTICE '✅ VERIFICATION PASSED: Trigger and function exist.';
-  ELSE
-    RAISE NOTICE '❌ VERIFICATION FAILED: Trigger or function missing!';
+  IF NOT (trigger_exists AND func_exists) THEN
+    RAISE EXCEPTION '❌ MISSING OBJECTS: Trigger or function not found!';
   END IF;
+
+  RAISE NOTICE '✅ Objects exist. Attempting test insert into auth.users...';
+
+  -- 2. Attempt to insert a test user into auth.users (Simulate Signup)
+  -- We use a transaction so we can roll it back or clean it up
+  BEGIN
+    INSERT INTO auth.users (
+      instance_id,
+      id,
+      aud,
+      role,
+      email,
+      encrypted_password,
+      email_confirmed_at,
+      recovery_sent_at,
+      last_sign_in_at,
+      raw_app_meta_data,
+      raw_user_meta_data,
+      created_at,
+      updated_at,
+      confirmation_token,
+      email_change,
+      email_change_token_new,
+      recovery_token
+    ) VALUES (
+      '00000000-0000-0000-0000-000000000000',
+      test_uid,
+      'authenticated',
+      'authenticated',
+      test_email,
+      'test_pass_hash',
+      now(),
+      now(),
+      now(),
+      '{\"provider\": \"email\", \"providers\": [\"email\"]}',
+      '{\"display_name\": \"Test User\"}',
+      now(),
+      now(),
+      '',
+      '',
+      '',
+      ''
+    );
+    
+    RAISE NOTICE '✅ Insert into auth.users successful.';
+    
+    -- 3. Check if user_profiles entry was created by trigger
+    IF EXISTS (SELECT 1 FROM public.user_profiles WHERE id = test_uid) THEN
+      RAISE NOTICE '✅ TRIGGER SUCCESS: User profile created automatically!';
+    ELSE
+      RAISE EXCEPTION '❌ TRIGGER FAILURE: User profile NOT created!';
+    END IF;
+
+    -- Cleanup
+    DELETE FROM auth.users WHERE id = test_uid;
+    -- Profile should be deleted by CASCADE (checked in table definition)
+    
+  EXCEPTION WHEN OTHERS THEN
+    RAISE NOTICE '❌ TEST FAILED WITH ERROR: %', SQLERRM;
+    RAISE; -- Re-raise to fail the script
+  END;
 END
 \$\$;
 "
 
-echo "✅ Database fixes applied. Please try creating the user again at /tempsuper"
+echo "✅ Database fixes applied and VERIFIED. Please try creating the user again at /tempsuper"
