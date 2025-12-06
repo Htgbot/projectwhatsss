@@ -110,15 +110,37 @@ DECLARE
   func_exists boolean;
   test_uid uuid := gen_random_uuid();
   test_email text := 'test_trigger_' || floor(random() * 1000)::text || '@example.com';
+  trigger_rec record;
+  role_rec record;
 BEGIN
+  -- 0. DIAGNOSTICS
+  RAISE NOTICE '--- DIAGNOSTICS START ---';
+  
+  -- Check Role Permissions
+  SELECT * INTO role_rec FROM pg_roles WHERE rolname = 'supabase_auth_admin';
+  RAISE NOTICE 'Role supabase_auth_admin: Super=% BypassRLS=%', role_rec.rolsuper, role_rec.rolbypassrls;
+  
+  -- Check Trigger Status
+  SELECT tgname, tgenabled, tgisinternal INTO trigger_rec 
+  FROM pg_trigger 
+  WHERE tgname = 'on_auth_user_created';
+  
+  IF FOUND THEN
+    RAISE NOTICE 'Trigger found: Name=% Enabled=% (O=Origin, D=Disabled, R=Replica, A=Always)', trigger_rec.tgname, trigger_rec.tgenabled;
+  ELSE
+    RAISE NOTICE '❌ Trigger on_auth_user_created NOT FOUND in pg_trigger!';
+  END IF;
+
+  -- Check Table Owner
+  RAISE NOTICE 'Table auth.users Owner: %', (SELECT rolname FROM pg_roles WHERE oid = (SELECT relowner FROM pg_class WHERE relname = 'users' AND relnamespace = (SELECT oid FROM pg_namespace WHERE nspname = 'auth')));
+
+  RAISE NOTICE '--- DIAGNOSTICS END ---';
+
   -- Switch to the role that Supabase Auth uses
   SET ROLE supabase_auth_admin;
   
   -- 1. Check objects exist
   SELECT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'on_auth_user_created') INTO trigger_exists;
-  
-  -- Note: We check function existence as postgres before switching, or assume it exists. 
-  -- But checking trigger is enough.
   
   IF NOT trigger_exists THEN
     RAISE EXCEPTION '❌ MISSING OBJECTS: Trigger not found!';
@@ -127,7 +149,6 @@ BEGIN
   RAISE NOTICE '✅ Objects exist. Attempting test insert into auth.users as supabase_auth_admin...';
 
   -- 2. Attempt to insert a test user into auth.users (Simulate Signup)
-  -- We use a transaction so we can roll it back or clean it up
   BEGIN
     INSERT INTO auth.users (
       instance_id,
@@ -174,7 +195,13 @@ BEGIN
     IF EXISTS (SELECT 1 FROM public.user_profiles WHERE id = test_uid) THEN
       RAISE NOTICE '✅ TRIGGER SUCCESS: User profile created automatically!';
     ELSE
-      RAISE EXCEPTION '❌ TRIGGER FAILURE: User profile NOT created!';
+      -- Check if it exists as postgres (in case of permission hidden)
+      RESET ROLE; -- Switch back to postgres
+      IF EXISTS (SELECT 1 FROM public.user_profiles WHERE id = test_uid) THEN
+         RAISE EXCEPTION '❌ TRIGGER PARTIAL SUCCESS: Profile created but hidden from supabase_auth_admin (Permission/RLS issue)!';
+      ELSE
+         RAISE EXCEPTION '❌ TRIGGER FAILURE: User profile NOT created at all!';
+      END IF;
     END IF;
 
     -- Cleanup
