@@ -7,12 +7,16 @@ echo "🔧 Diagnosing and fixing database issues..."
 
 # 1. Apply the fix_auth_trigger migration directly
 echo "   - Applying auth trigger fixes..."
+
+# First, try to enable pgcrypto separately (ignore failure if it's permission related, as it might already exist)
+echo "   - Ensuring pgcrypto extension..."
+docker compose exec -T db psql -U postgres -d postgres -c "CREATE EXTENSION IF NOT EXISTS \"pgcrypto\" SCHEMA extensions;" 2>/dev/null || echo "     (Note: pgcrypto setup encountered a warning, proceeding assuming it exists or is managed by system)"
+
+# Now apply the function and trigger (Critical part)
+echo "   - Creating handle_new_user function and trigger..."
 docker compose exec -T db psql -U postgres -d postgres -c "
 -- Create extensions schema if not exists
 CREATE SCHEMA IF NOT EXISTS extensions;
-
--- Ensure pgcrypto exists
-CREATE EXTENSION IF NOT EXISTS \"pgcrypto\" SCHEMA extensions;
 
 -- Grant usage on extensions
 GRANT USAGE ON SCHEMA extensions TO supabase_auth_admin, postgres, authenticated, anon, service_role;
