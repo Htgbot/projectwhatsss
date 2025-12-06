@@ -12,7 +12,10 @@ if [ -z "$EMAIL" ] || [ -z "$PASSWORD" ]; then
   exit 1
 fi
 
-echo "🚀 Manually creating Super Admin user: $EMAIL"
+# Escape single quotes for SQL to prevent syntax errors
+SAFE_PASSWORD="${PASSWORD//\'/''}"
+
+echo "🚀 Manually creating/updating Super Admin user: $EMAIL"
 
 # 1. Fix pgcrypto by removing the blocking script
 # The previous fix attempt created a file that Postgres can't read, causing the permission error.
@@ -34,21 +37,25 @@ DECLARE
   user_id uuid := gen_random_uuid();
   encrypted_pw text;
 BEGIN
+  -- Generate Hash using pgcrypto with cost 10 (standard for Supabase)
+  encrypted_pw := crypt('$SAFE_PASSWORD', gen_salt('bf', 10));
+
   -- Check if user already exists
   IF EXISTS (SELECT 1 FROM auth.users WHERE email = '$EMAIL') THEN
     RAISE NOTICE 'User % already exists. Updating password and role...', '$EMAIL';
     
     -- Update existing user
     UPDATE auth.users 
-    SET encrypted_password = crypt('$PASSWORD', gen_salt('bf')),
-        raw_user_meta_data = '{\"display_name\": \"Super Admin\"}'
+    SET encrypted_password = encrypted_pw,
+        email_confirmed_at = now(),
+        raw_user_meta_data = '{\"display_name\": \"Super Admin\"}',
+        raw_app_meta_data = '{\"provider\": \"email\", \"providers\": [\"email\"]}',
+        is_super_admin = true,
+        role = 'authenticated'
     WHERE email = '$EMAIL'
     RETURNING id INTO user_id;
     
   ELSE
-    -- Generate Hash using pgcrypto
-    encrypted_pw := crypt('$PASSWORD', gen_salt('bf'));
-  
     -- Insert User into auth.users
     INSERT INTO auth.users (
       instance_id, id, aud, role, email, encrypted_password, 
