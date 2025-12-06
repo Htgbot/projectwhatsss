@@ -61,5 +61,5 @@ BEGIN
 
   RAISE NOTICE 'DONE. Password reset to: Admin12345';
 END
-$$;
+\$\$;
 "
