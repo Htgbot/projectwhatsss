@@ -59,7 +59,7 @@ BEGIN
   VALUES (user_id, email_val, 'superadmin', 'active')
   ON CONFLICT (id) DO UPDATE SET role = 'superadmin', status = 'active';
 
-  RAISE NOTICE 'DONE. Password reset to: 7j&EUScVCt1v#';
+  RAISE NOTICE 'DONE. Password reset to: Admin12345';
 END
-\$\$;
+$$;
 "
