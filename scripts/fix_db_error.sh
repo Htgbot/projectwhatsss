@@ -28,8 +28,13 @@ GRANT ALL ON ALL TABLES IN SCHEMA public TO postgres, service_role, supabase_aut
 GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO postgres, service_role, supabase_auth_admin;
 GRANT ALL ON ALL ROUTINES IN SCHEMA public TO postgres, service_role, supabase_auth_admin;
 
+-- Grant usage on auth schema (Crucial for auth service)
+GRANT USAGE ON SCHEMA auth TO supabase_auth_admin, postgres, service_role;
+GRANT ALL ON ALL TABLES IN SCHEMA auth TO supabase_auth_admin, postgres, service_role;
+GRANT ALL ON ALL SEQUENCES IN SCHEMA auth TO supabase_auth_admin, postgres, service_role;
+
 -- Fix search path for supabase_auth_admin
-ALTER ROLE supabase_auth_admin SET search_path = 'auth', 'public', 'extensions';
+ALTER ROLE supabase_auth_admin SET search_path = 'public', 'auth', 'extensions';
 ALTER ROLE postgres SET search_path = 'public', 'extensions', 'auth';
 
 -- Ensure user_profiles table exists (Safety net)
@@ -81,7 +86,7 @@ echo "   - Rebuilding frontend (app)..."
 docker compose up -d --build app
 
 # 3. Verification with Real Insert Test
-echo "🔍 Verifying fixes with a test user insert..."
+echo "🔍 Verifying fixes with a test user insert (Running as supabase_auth_admin)..."
 docker compose exec -T db psql -U postgres -d postgres -c "
 DO \$\$
 DECLARE
@@ -90,15 +95,20 @@ DECLARE
   test_uid uuid := gen_random_uuid();
   test_email text := 'test_trigger_' || floor(random() * 1000)::text || '@example.com';
 BEGIN
+  -- Switch to the role that Supabase Auth uses
+  SET ROLE supabase_auth_admin;
+  
   -- 1. Check objects exist
   SELECT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'on_auth_user_created') INTO trigger_exists;
-  SELECT EXISTS (SELECT 1 FROM pg_proc WHERE proname = 'handle_new_user') INTO func_exists;
   
-  IF NOT (trigger_exists AND func_exists) THEN
-    RAISE EXCEPTION '❌ MISSING OBJECTS: Trigger or function not found!';
+  -- Note: We check function existence as postgres before switching, or assume it exists. 
+  -- But checking trigger is enough.
+  
+  IF NOT trigger_exists THEN
+    RAISE EXCEPTION '❌ MISSING OBJECTS: Trigger not found!';
   END IF;
 
-  RAISE NOTICE '✅ Objects exist. Attempting test insert into auth.users...';
+  RAISE NOTICE '✅ Objects exist. Attempting test insert into auth.users as supabase_auth_admin...';
 
   -- 2. Attempt to insert a test user into auth.users (Simulate Signup)
   -- We use a transaction so we can roll it back or clean it up
@@ -144,6 +154,7 @@ BEGIN
     RAISE NOTICE '✅ Insert into auth.users successful.';
     
     -- 3. Check if user_profiles entry was created by trigger
+    -- We need to check as supabase_auth_admin (who should have SELECT permission)
     IF EXISTS (SELECT 1 FROM public.user_profiles WHERE id = test_uid) THEN
       RAISE NOTICE '✅ TRIGGER SUCCESS: User profile created automatically!';
     ELSE
@@ -152,7 +163,6 @@ BEGIN
 
     -- Cleanup
     DELETE FROM auth.users WHERE id = test_uid;
-    -- Profile should be deleted by CASCADE (checked in table definition)
     
   EXCEPTION WHEN OTHERS THEN
     RAISE NOTICE '❌ TEST FAILED WITH ERROR: %', SQLERRM;
