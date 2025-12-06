@@ -17,10 +17,18 @@ export default function TempSuper() {
     setLoading(true);
 
     try {
-      // Use email as display name since we removed the field
-      await signUp(email, password, email);
+      // Minimal sign up - just email and password
+      // The trigger will handle profile creation with default 'admin' role
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+      });
+
+      if (error) throw error;
+      
       setSuccess('Account created successfully! Please run "./scripts/set_superadmin.sh ' + email + '" on your VPS to make this user a Super Admin.');
     } catch (err: any) {
+      console.error('Signup error:', err);
       setError(err.message || 'Failed to create account');
     } finally {
       setLoading(false);
