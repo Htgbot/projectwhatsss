@@ -3,8 +3,8 @@
 
 echo "Fixing Superadmin Login..."
 
-# Ensure pgcrypto exists
-docker compose exec -T db psql -U postgres -d postgres -c "CREATE EXTENSION IF NOT EXISTS \"pgcrypto\" SCHEMA extensions;"
+# REMOVED: The line causing permission errors. pgcrypto should already be there.
+# docker compose exec -T db psql -U postgres -d postgres -c "CREATE EXTENSION IF NOT EXISTS \"pgcrypto\" SCHEMA extensions;"
 
 docker compose exec -T db psql -U postgres -d postgres -c "
 DO \$\$
