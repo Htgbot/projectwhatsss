@@ -3,11 +3,9 @@
 
 echo "Fixing Superadmin Login..."
 
-# REMOVED: The line causing permission errors. pgcrypto should already be there.
-# docker compose exec -T db psql -U postgres -d postgres -c "CREATE EXTENSION IF NOT EXISTS \"pgcrypto\" SCHEMA extensions;"
-
-docker compose exec -T db psql -U postgres -d postgres -c "
-DO \$\$
+# Use heredoc with single quotes to prevent Bash expansion issues
+docker compose exec -T db psql -U postgres -d postgres <<'EOSQL'
+DO $$
 DECLARE
   user_id uuid;
   encrypted_pw text;
@@ -26,8 +24,8 @@ BEGIN
     SET encrypted_password = encrypted_pw,
         email_confirmed_at = now(),
         updated_at = now(),
-        raw_app_meta_data = '{\"provider\": \"email\", \"providers\": [\"email\"]}',
-        raw_user_meta_data = '{\"display_name\": \"Super Admin\"}',
+        raw_app_meta_data = '{"provider": "email", "providers": ["email"]}',
+        raw_user_meta_data = '{"display_name": "Super Admin"}',
         is_super_admin = true,
         role = 'authenticated'
     WHERE id = user_id;
@@ -43,14 +41,14 @@ BEGIN
     ) VALUES (
       '00000000-0000-0000-0000-000000000000', user_id, 'authenticated', 'authenticated', email_val, encrypted_pw, 
       now(), now(), now(), 
-      '{\"provider\": \"email\", \"providers\": [\"email\"]}', '{\"display_name\": \"Super Admin\"}', 
+      '{"provider": "email", "providers": ["email"]}', '{"display_name": "Super Admin"}', 
       now(), now(), '', '', '', '', true
     );
     
     INSERT INTO auth.identities (
       id, user_id, identity_data, provider, last_sign_in_at, created_at, updated_at
     ) VALUES (
-      user_id, user_id, format('{\"sub\": \"%s\", \"email\": \"%s\"}', user_id, email_val)::jsonb, 'email', now(), now(), now()
+      user_id, user_id, format('{"sub": "%s", "email": "%s"}', user_id, email_val)::jsonb, 'email', now(), now(), now()
     );
   END IF;
 
@@ -61,5 +59,5 @@ BEGIN
 
   RAISE NOTICE 'DONE. Password reset to: Admin12345';
 END
-\$\$;
-"
+$$;
+EOSQL
