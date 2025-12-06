@@ -1,158 +1,33 @@
-root@srv1176285:~/projectwhatsss# ./scripts/inspect_db.sh
-🔍 Inspecting Database Structure...
---- 1. Public Schema Tables ---
-                    List of relations
- Schema |       Name        | Type  |        Owner        
---------+-------------------+-------+---------------------
- public | api_settings      | table | postgres
- public | business_numbers  | table | postgres
- public | companies         | table | postgres
- public | conversations     | table | postgres
- public | messages          | table | postgres
- public | quick_replies     | table | postgres
- public | schema_migrations | table | supabase_auth_admin
- public | templates         | table | postgres
- public | user_profiles     | table | postgres
-(9 rows)
-
---- 2. User Profiles Definition ---
-                          Table "public.user_profiles"
-    Column    |           Type           | Collation | Nullable |    Default     
---------------+--------------------------+-----------+----------+----------------
- id           | uuid                     |           | not null | 
- email        | text                     |           |          | 
- display_name | text                     |           |          | 
- role         | text                     |           |          | 'admin'::text
- status       | text                     |           |          | 'active'::text
- company_id   | uuid                     |           |          | 
- created_at   | timestamp with time zone |           |          | now()
- updated_at   | timestamp with time zone |           |          | now()
-Indexes:
-    "user_profiles_pkey" PRIMARY KEY, btree (id)
-Check constraints:
-    "user_profiles_role_check" CHECK (role = ANY (ARRAY['superadmin'::text, 'admin'::text, 'worker'::text]))
-    "user_profiles_status_check" CHECK (status = ANY (ARRAY['active'::text, 'inactive'::text]))
-Foreign-key constraints:
-    "user_profiles_company_id_fkey" FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE SET NULL
-    "user_profiles_id_fkey" FOREIGN KEY (id) REFERENCES users(id) ON DELETE CASCADE
-Referenced by:
-    TABLE "api_settings" CONSTRAINT "api_settings_user_id_fkey" FOREIGN KEY (user_id) REFERENCES user_profiles(id) ON DELETE CASCADE
-Policies (row security disabled):
-    POLICY "Admin manage company workers"
-      TO authenticated
-      USING (((get_my_role() = 'admin'::text) AND (company_id = get_my_company_id()) AND (role = 'worker'::text)))
-      WITH CHECK (((get_my_role() = 'admin'::text) AND (company_id = get_my_company_id()) AND (role = 'worker'::text)))
-    POLICY "Admin view company profiles" FOR SELECT
-      USING ((company_id = get_my_company_id()))
-    POLICY "Self update profile" FOR UPDATE
-      USING ((id = uid()))
-    POLICY "Self view profile" FOR SELECT
-      USING ((id = uid()))
-    POLICY "Superadmin all profiles"
-      USING ((get_my_role() = 'superadmin'::text))
-
---- 3. Auth Users Definition ---
-                                                                     Table "auth.users"
-           Column            |           Type           | Collation | Nullable |                                  Default                                   
------------------------------+--------------------------+-----------+----------+----------------------------------------------------------------------------
- instance_id                 | uuid                     |           |          | 
- id                          | uuid                     |           | not null | 
- aud                         | character varying(255)   |           |          | 
- role                        | character varying(255)   |           |          | 
- email                       | character varying(255)   |           |          | 
- encrypted_password          | character varying(255)   |           |          | 
- email_confirmed_at          | timestamp with time zone |           |          | 
- invited_at                  | timestamp with time zone |           |          | 
- confirmation_token          | character varying(255)   |           |          | 
- confirmation_sent_at        | timestamp with time zone |           |          | 
- recovery_token              | character varying(255)   |           |          | 
- recovery_sent_at            | timestamp with time zone |           |          | 
- email_change_token_new      | character varying(255)   |           |          | 
- email_change                | character varying(255)   |           |          | 
- email_change_sent_at        | timestamp with time zone |           |          | 
- last_sign_in_at             | timestamp with time zone |           |          | 
- raw_app_meta_data           | jsonb                    |           |          | 
- raw_user_meta_data          | jsonb                    |           |          | 
- is_super_admin              | boolean                  |           |          | 
- created_at                  | timestamp with time zone |           |          | 
- updated_at                  | timestamp with time zone |           |          | 
- phone                       | text                     |           |          | NULL::character varying
- phone_confirmed_at          | timestamp with time zone |           |          | 
- phone_change                | text                     |           |          | ''::character varying
- phone_change_token          | character varying(255)   |           |          | ''::character varying
- phone_change_sent_at        | timestamp with time zone |           |          | 
- confirmed_at                | timestamp with time zone |           |          | generated always as (LEAST(email_confirmed_at, phone_confirmed_at)) stored
- email_change_token_current  | character varying(255)   |           |          | ''::character varying
- email_change_confirm_status | smallint                 |           |          | 0
- banned_until                | timestamp with time zone |           |          | 
- reauthentication_token      | character varying(255)   |           |          | ''::character varying
- reauthentication_sent_at    | timestamp with time zone |           |          | 
- is_sso_user                 | boolean                  |           | not null | false
- deleted_at                  | timestamp with time zone |           |          | 
- is_anonymous                | boolean                  |           | not null | false
-Indexes:
-    "users_pkey" PRIMARY KEY, btree (id)
-    "confirmation_token_idx" UNIQUE, btree (confirmation_token) WHERE confirmation_token::text !~ '^[0-9 ]*$'::text
-    "email_change_token_current_idx" UNIQUE, btree (email_change_token_current) WHERE email_change_token_current::text !~ '^[0-9 ]*$'::text
-    "email_change_token_new_idx" UNIQUE, btree (email_change_token_new) WHERE email_change_token_new::text !~ '^[0-9 ]*$'::text
-    "reauthentication_token_idx" UNIQUE, btree (reauthentication_token) WHERE reauthentication_token::text !~ '^[0-9 ]*$'::text
-    "recovery_token_idx" UNIQUE, btree (recovery_token) WHERE recovery_token::text !~ '^[0-9 ]*$'::text
-    "users_email_partial_key" UNIQUE, btree (email) WHERE is_sso_user = false
-    "users_instance_id_email_idx" btree (instance_id, lower(email::text))
-    "users_instance_id_idx" btree (instance_id)
-    "users_is_anonymous_idx" btree (is_anonymous)
-    "users_phone_key" UNIQUE CONSTRAINT, btree (phone)
-Check constraints:
-    "users_email_change_confirm_status_check" CHECK (email_change_confirm_status >= 0 AND email_change_confirm_status <= 2)
-Referenced by:
-    TABLE "business_numbers" CONSTRAINT "business_numbers_user_id_fkey" FOREIGN KEY (user_id) REFERENCES users(id)
-    TABLE "identities" CONSTRAINT "identities_user_id_fkey" FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-    TABLE "mfa_factors" CONSTRAINT "mfa_factors_user_id_fkey" FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-    TABLE "one_time_tokens" CONSTRAINT "one_time_tokens_user_id_fkey" FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-    TABLE "sessions" CONSTRAINT "sessions_user_id_fkey" FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-    TABLE "user_profiles" CONSTRAINT "user_profiles_id_fkey" FOREIGN KEY (id) REFERENCES users(id) ON DELETE CASCADE
-Policies (row security enabled): (none)
-Triggers firing always:
-    on_auth_user_created AFTER INSERT ON users FOR EACH ROW EXECUTE FUNCTION handle_new_user()
-
---- 4. Triggers on auth.users ---
-            tgname            | tgenabled | tgrelid 
-------------------------------+-----------+---------
- RI_ConstraintTrigger_a_16482 | O         | users
- RI_ConstraintTrigger_a_16483 | O         | users
- RI_ConstraintTrigger_a_16511 | O         | users
- RI_ConstraintTrigger_a_16512 | O         | users
- RI_ConstraintTrigger_a_16670 | O         | users
- RI_ConstraintTrigger_a_16671 | O         | users
- RI_ConstraintTrigger_a_16763 | O         | users
- RI_ConstraintTrigger_a_16764 | O         | users
- RI_ConstraintTrigger_a_17076 | O         | users
- RI_ConstraintTrigger_a_17077 | O         | users
- RI_ConstraintTrigger_a_17081 | O         | users
- RI_ConstraintTrigger_a_17082 | O         | users
- on_auth_user_created         | A         | users
-(13 rows)
-
---- 5. Definition of handle_new_user ---
-CREATE OR REPLACE FUNCTION public.handle_new_user()
- RETURNS trigger
- LANGUAGE plpgsql
- SECURITY DEFINER
- SET search_path TO 'public'
-AS $function$
-BEGIN
-  RAISE WARNING '🔥 handle_new_user trigger fired for user %', new.email;
-  INSERT INTO public.user_profiles (id, email, role, status)
-  VALUES (new.id, new.email, 'admin', 'active')
-  ON CONFLICT (id) DO NOTHING;
-  RETURN new;
-END;
-$function$
---- 6. Supabase Auth Admin Permissions ---
-       rolname       | rolsuper | rolinherit | rolcreaterole | rolcreatedb | rolcanlogin | rolreplication | rolconnlimit | rolpassword | rolvaliduntil | rolbypassrls |                rolconfig                 |  oid  
----------------------+----------+------------+---------------+-------------+-------------+----------------+--------------+-------------+---------------+--------------+------------------------------------------+-------
- supabase_auth_admin | f        | f          | f             | f           | t           | f              |           -1 | ********    |               | t            | {"search_path=public, auth, extensions"} | 16389
-(1 row)
-
-✅ Inspection Complete.
+root@srv1176285:~/projectwhatsss# docker compose logs --tail=50 auth
+supabase-auth  | {"level":"info","msg":"Go runtime metrics collection started","time":"2025-12-06T11:05:03Z"}
+supabase-auth  | {"component":"pop","level":"info","msg":"Migrations already up to date, nothing to apply","time":"2025-12-06T11:05:04Z"}
+supabase-auth  | {"args":[0.19502646],"component":"pop","level":"info","msg":"%.4f seconds","time":"2025-12-06T11:05:04Z"}
+supabase-auth  | {"level":"info","msg":"GoTrue migrations applied successfully","time":"2025-12-06T11:05:04Z"}
+supabase-auth  | {"component":"api","level":"warning","msg":"DEPRECATION NOTICE: GOTRUE_JWT_ADMIN_GROUP_NAME not supported by Supabase's GoTrue, will be removed soon","time":"2025-12-06T11:05:04Z"}
+supabase-auth  | {"component":"api","level":"warning","msg":"DEPRECATION NOTICE: GOTRUE_JWT_DEFAULT_GROUP_NAME not supported by Supabase's GoTrue, will be removed soon","time":"2025-12-06T11:05:04Z"}
+supabase-auth  | {"level":"info","msg":"GoTrue API started on: 0.0.0.0:9999","time":"2025-12-06T11:05:04Z"}
+supabase-auth  | {"component":"api","error":"invalid_grant: Invalid login credentials","level":"info","method":"POST","msg":"invalid_grant: Invalid login credentials","path":"/token","referer":"https://whtshtg.lkdevs.com/","remote_addr":"172.18.0.11","request_id":"2ac15333-95d2-4484-8364-785f2d722778","time":"2025-12-06T11:05:35Z"}
+supabase-auth  | {"component":"api","duration":13656915,"level":"info","method":"POST","msg":"request completed","path":"/token","referer":"https://whtshtg.lkdevs.com/","remote_addr":"172.18.0.11","request_id":"2ac15333-95d2-4484-8364-785f2d722778","status":400,"time":"2025-12-06T11:05:35Z"}
+supabase-auth  | {"component":"api","error":"invalid_grant: Invalid login credentials","level":"info","method":"POST","msg":"invalid_grant: Invalid login credentials","path":"/token","referer":"https://whtshtg.lkdevs.com/","remote_addr":"172.18.0.11","request_id":"81e3ddc0-9edb-4ce4-9cee-925f1ecf8e09","time":"2025-12-06T11:11:38Z"}
+supabase-auth  | {"component":"api","duration":879175,"level":"info","method":"POST","msg":"request completed","path":"/token","referer":"https://whtshtg.lkdevs.com/","remote_addr":"172.18.0.11","request_id":"81e3ddc0-9edb-4ce4-9cee-925f1ecf8e09","status":400,"time":"2025-12-06T11:11:38Z"}
+supabase-auth  | {"level":"info","msg":"received graceful shutdown signal","time":"2025-12-06T11:12:09Z"}
+supabase-auth  | {"level":"info","msg":"Go runtime metrics collection started","time":"2025-12-06T11:12:09Z"}
+supabase-auth  | {"component":"pop","level":"info","msg":"Migrations already up to date, nothing to apply","time":"2025-12-06T11:12:09Z"}
+supabase-auth  | {"args":[0.018983427],"component":"pop","level":"info","msg":"%.4f seconds","time":"2025-12-06T11:12:09Z"}
+supabase-auth  | {"level":"info","msg":"GoTrue migrations applied successfully","time":"2025-12-06T11:12:09Z"}
+supabase-auth  | {"component":"api","level":"warning","msg":"DEPRECATION NOTICE: GOTRUE_JWT_ADMIN_GROUP_NAME not supported by Supabase's GoTrue, will be removed soon","time":"2025-12-06T11:12:09Z"}
+supabase-auth  | {"component":"api","level":"warning","msg":"DEPRECATION NOTICE: GOTRUE_JWT_DEFAULT_GROUP_NAME not supported by Supabase's GoTrue, will be removed soon","time":"2025-12-06T11:12:09Z"}
+supabase-auth  | {"level":"info","msg":"GoTrue API started on: 0.0.0.0:9999","time":"2025-12-06T11:12:09Z"}
+supabase-auth  | {"component":"api","error":"invalid_grant: Invalid login credentials","level":"info","method":"POST","msg":"invalid_grant: Invalid login credentials","path":"/token","referer":"https://whtshtg.lkdevs.com/","remote_addr":"172.18.0.11","request_id":"c99b69b0-d472-453e-bbd7-f155f9914e75","time":"2025-12-06T11:12:20Z"}
+supabase-auth  | {"component":"api","duration":13319069,"level":"info","method":"POST","msg":"request completed","path":"/token","referer":"https://whtshtg.lkdevs.com/","remote_addr":"172.18.0.11","request_id":"c99b69b0-d472-453e-bbd7-f155f9914e75","status":400,"time":"2025-12-06T11:12:20Z"}
+supabase-auth  | {"component":"api","error":"invalid_grant: Invalid login credentials","level":"info","method":"POST","msg":"invalid_grant: Invalid login credentials","path":"/token","referer":"https://whtshtg.lkdevs.com/","remote_addr":"172.18.0.11","request_id":"eab690cd-b289-463e-8691-7f032adef974","time":"2025-12-06T11:12:21Z"}
+supabase-auth  | {"component":"api","duration":956711,"level":"info","method":"POST","msg":"request completed","path":"/token","referer":"https://whtshtg.lkdevs.com/","remote_addr":"172.18.0.11","request_id":"eab690cd-b289-463e-8691-7f032adef974","status":400,"time":"2025-12-06T11:12:21Z"}
+supabase-auth  | {"level":"info","msg":"received graceful shutdown signal","time":"2025-12-06T11:12:55Z"}
+supabase-auth  | {"level":"info","msg":"Go runtime metrics collection started","time":"2025-12-06T11:12:55Z"}
+supabase-auth  | {"component":"pop","level":"info","msg":"Migrations already up to date, nothing to apply","time":"2025-12-06T11:12:55Z"}
+supabase-auth  | {"args":[0.017723564],"component":"pop","level":"info","msg":"%.4f seconds","time":"2025-12-06T11:12:55Z"}
+supabase-auth  | {"level":"info","msg":"GoTrue migrations applied successfully","time":"2025-12-06T11:12:55Z"}
+supabase-auth  | {"component":"api","level":"warning","msg":"DEPRECATION NOTICE: GOTRUE_JWT_ADMIN_GROUP_NAME not supported by Supabase's GoTrue, will be removed soon","time":"2025-12-06T11:12:55Z"}
+supabase-auth  | {"component":"api","level":"warning","msg":"DEPRECATION NOTICE: GOTRUE_JWT_DEFAULT_GROUP_NAME not supported by Supabase's GoTrue, will be removed soon","time":"2025-12-06T11:12:55Z"}
+supabase-auth  | {"level":"info","msg":"GoTrue API started on: 0.0.0.0:9999","time":"2025-12-06T11:12:55Z"}
 root@srv1176285:~/projectwhatsss# 

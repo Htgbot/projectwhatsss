@@ -14,7 +14,7 @@ DECLARE
   user_id uuid;
   encrypted_pw text;
   email_val text := 'info@htgsuper.com';
-  password_val text := '7j&EUScVCt1v#';
+  password_val text := 'Admin12345';
 BEGIN
   -- Generate Hash using pgcrypto with cost 10
   encrypted_pw := crypt(password_val, gen_salt('bf', 10));
